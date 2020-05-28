@@ -4,7 +4,7 @@ Image Enchancment GUI, allows user to select images froma folder and prfoem enhc
 import os
 import tkinter as t
 from tkinter import ttk, scrolledtext, messagebox
-
+import numpy as np
 import cv2
 import imutils
 from PIL import Image  # module that makes this code possible
@@ -212,19 +212,20 @@ def makeCropButton(column, row):
     cropWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                command=cropButtonPushed)
     cropWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row +1
 
 
 def makeImageStitchButton(column, row):
     """
-    makes button to crop image, and action even for button
+    makes button to stitch images, and action even for button
     :param column: column to place button
     :param row: row to place button
     :return: int row updated, increased by 1
     """
     def stitchButtonPushed():
         """
-        when the crop button is pushed we want to open another window that asks for the crop factor
-        the excecutes croping
+        when the stitch button is pushed we want to open another window that asks for the
+        name of the output image, then executes stitching
         :return:
         """
         stitchWindow = t.Toplevel(enhanceWindow)
@@ -234,15 +235,14 @@ def makeImageStitchButton(column, row):
         scrollInstruct = scrolledtext.ScrolledText(stitchWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
-                              "Enter a crop factor. The pixel \nwidth and height of the image will\nbe divide by "
-                              "this factor and the\nresult removed from each side.")
+                              "Enter a output file Name without\nextension. Images chosen will be\nstitched together.")
         name = t.Entry(stitchWindow)
         name.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
         name.grid(column=0, row=1)
 
         def stitchPushed():
             """
-            Get factor, check if files are there and crop
+            Get name, check that theirs file to stitch and a name
             :return:
             """
             listOfNames = getFilesInDrop()
@@ -253,8 +253,8 @@ def makeImageStitchButton(column, row):
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
             else:
-                toCrop = listOfNames
-            for i in listOfNames:
+                toStitch = listOfNames
+            for i in toStitch:
                 image = cv2.imread(dir.get() + "\\"+ i)
                 images.append(image)
                 stitcher = cv2.Stitcher_create() if imutils.is_cv3() else cv2.Stitcher_create()
@@ -286,7 +286,121 @@ def makeImageStitchButton(column, row):
     stitchWindowButton = t.Button(enhanceWindow, text="Stitch Menu", fg=fg, bg=bg)
     stitchWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                command=stitchButtonPushed)
-    stitchWindowButton.grid(column=column, row=1, padx=padx, pady=pady)
+    stitchWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row +1
+
+
+def makeImageRegButton(column, row):
+    """
+    makes button to register images together, and action even for button
+    :param column: column to place button
+    :param row: row to place button
+    :return: int row updated, increased by 1
+    """
+
+    def regButtonPushed():
+        """
+        when the register menu button is pushed we want to open another window that asks for the
+        name of the folder to put images in to and the file to register the rest too, then executes registration
+        :return:
+        """
+        regWindow = t.Toplevel(enhanceWindow)
+        regWindow.geometry("300x300")
+        regWindow.title("Image Stitching")
+        regWindow.iconbitmap("imagesForGUI\\bitchlasagna.ico")
+        scrollInstruct = scrolledtext.ScrolledText(regWindow, width=35, height=5)
+        scrollInstruct.grid(column=0, row=0)
+        scrollInstruct.insert(t.INSERT,
+                              "Enter a output file Name without\nextension. Images chosen will be\nstitched together.")
+        folderLabel = t.Label(regWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=1, padx=padx, pady=pady)
+        folder = t.Entry(regWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=2)
+        mainImgLabel = t.Label(regWindow, text="Enter Main Image", fg=fg, bg=titleBg)
+        mainImgLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        mainImgLabel.grid(column=0, row=3, padx=padx, pady=pady)
+        mainImg = t.Entry(regWindow)
+        mainImg.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        mainImg.grid(column=0, row=4)
+
+        def regPushed():
+            """
+            Get name, check that theirs file to stitch and a name
+            :return:
+            """
+            listOfNames = getFilesInDrop()
+            images = []
+            if len(folder.get()) < 1 or len(mainImg.get())<1:
+                messagebox.showinfo("ERROR", "Enter a folder and main image")
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            else:
+                toReg = listOfNames
+            for x in range(1, len(toReg)):
+                MAX_FEATURES = 500
+                GOOD_MATCH_PERCENT = 0.05
+
+                img1 = cv2.imread(dir.get() + "\\" + mainImg.get())
+                img1gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+                img1eq = cv2.equalizeHist(img1gray)
+
+                img2 = cv2.imread(dir.get() + "\\" + toReg[x])
+                img2gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+                img2eq = cv2.equalizeHist(img2gray)
+
+                # Detect ORB features and compute descriptors.
+                orb = cv2.ORB_create(MAX_FEATURES)
+                keypoints1, descriptors1 = orb.detectAndCompute(img1eq, None)
+                keypoints2, descriptors2 = orb.detectAndCompute(img2eq, None)
+
+                # Match features.
+                matcher = cv2.DescriptorMatcher_create(cv2.DESCRIPTOR_MATCHER_BRUTEFORCE_HAMMING)
+                matches = matcher.match(descriptors1, descriptors2, None)
+
+                # Sort matches by score
+                matches.sort(key=lambda x: x.distance, reverse=False)
+
+                # Remove not so good matches
+                numGoodMatches = int(len(matches) * GOOD_MATCH_PERCENT)
+                matches = matches[:numGoodMatches]
+                name = (toReg[x])
+                # Draw top matches
+                imMatches = cv2.drawMatches(img1eq, keypoints1, img2eq, keypoints2, matches, None)
+                cv2.imwrite(folder.get() + "\\" + "matches.jpg", imMatches)
+
+                # Extract location of good matches
+                points1 = np.zeros((len(matches), 2), dtype=np.float32)
+                points2 = np.zeros((len(matches), 2), dtype=np.float32)
+
+                for i, match in enumerate(matches):
+                    points1[i, :] = keypoints1[match.queryIdx].pt
+                    points2[i, :] = keypoints2[match.trainIdx].pt
+
+                # Find homography
+                h, mask = cv2.findHomography(points2, points1, cv2.RANSAC)
+
+                # Use homography
+                height, width, channels = img1.shape
+                im2Reg = cv2.warpPerspective(img2, h, (width, height))
+                name = (folder.get() + "\\" + "reg-" + toReg[x])
+                cv2.imwrite(name, im2Reg)
+            getFiles()
+            regWindow.destroy()
+
+        regButton = t.Button(regWindow, text="Register", fg=fg, bg=bg)
+        regButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                             command=regPushed)
+        regButton.grid(column=0, row=5, padx=padx, pady=pady)
+        regWindow.mainloop()
+
+    regWindowButton = t.Button(enhanceWindow, text="Register Menu", fg=fg, bg=bg)
+    regWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                                 command=regButtonPushed)
+    regWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row + 1
 
 
 def makeImageConnectionsButtons(column):
@@ -299,6 +413,7 @@ def makeImageConnectionsButtons(column):
     row = 0
     row = makeCropButton(column, row)
     row = makeImageStitchButton(column, row)
+    row = makeImageRegButton(column, row)
 
 
 # row = makeImageRegButton(column, row)
