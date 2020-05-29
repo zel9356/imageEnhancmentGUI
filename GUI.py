@@ -99,7 +99,7 @@ def getFiles():
                 files.append(f)
                 filesOptions.append(f)
 
-    if len(files)==0:
+    if len(files) == 0:
         messagebox.showinfo("ERROR", "Directory did not contain tiff or tif files")
         return
     # place the drop downs
@@ -107,10 +107,29 @@ def getFiles():
         if i == len(files):
             break
         filesChosen.append(ttk.Combobox(enhanceWindow))
-        filesChosen[i].configure(font=(font, fontSize), width=width)
+        filesChosen[i].configure(font=(font, fontSize), width=width,)
         filesChosen[i]['values'] = filesOptions
-        filesChosen[i].grid(column=0, row=i + 3)
+        filesChosen[i].grid(column=0, row=i + 3, padx=padx, pady=pady)
         filesChosen[i].current(1)
+
+
+def folderCheckCreation(folderPath):
+    """
+    For a given directory, the function checks to make sure the dir exists
+    if it doesnt exist, it creates it.
+    This can fail if it does it will return False to to tell the function that called it to quit,
+    if it succeeds it returns True.
+    :param: folderPath: string of dir of folder
+    :return: Boolean True if successful, False otherwise
+    """
+    if not os.path.isdir(folderPath):
+        try:
+            os.makedirs(folderPath)
+        except OSError:
+            return False
+    else:
+        return True
+    return True
 
 
 def makeFileColumn(column):
@@ -178,9 +197,18 @@ def makeCropButton(column, row):
         scrollInstruct.insert(t.INSERT,
                               "Enter a crop factor. The pixel \nwidth and height of the image will\nbe divide by "
                               "this factor and the\nresult removed from each side.")
+        cropLabel = t.Label(cropWindow, text="Enter crop factor", fg=fg, bg=titleBg)
+        cropLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        cropLabel.grid(column=0, row=1, padx=padx, pady=pady)
         cropFactor = t.Entry(cropWindow)
         cropFactor.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        cropFactor.grid(column=0, row=1)
+        cropFactor.grid(column=0, row=2)
+        folderLabel = t.Label(cropWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
+        folder = t.Entry(cropWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=4)
 
         def cropPushed():
             """
@@ -189,6 +217,13 @@ def makeCropButton(column, row):
             """
             listOfNames = getFilesInDrop()
             toCrop = [];
+            if len(folder.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a folder")
+                return
+            status = folderCheckCreation(folder.get())
+            if not status:
+                messagebox.showinfo("ERROR", "Directory not found and could not be created")
+                return
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
@@ -198,21 +233,21 @@ def makeCropButton(column, row):
                 if len(x) > 0:
                     image1 = Image.open(dir.get() + "\\" + x)
                     image2 = ImageOps.crop(image1, image1.size[1] // int(cropFactor.get()))
-                    image2.save(dir.get() + "\\" + "cropped-" + cropFactor.get() + "-" + x)
+                    image2.save(folder.get() + "\\" + "cropped-" + cropFactor.get() + "-" + x)
             getFiles()
             cropWindow.destroy()
 
         cropButton = t.Button(cropWindow, text="Crop", fg=fg, bg=bg)
         cropButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                              command=cropPushed)
-        cropButton.grid(column=0, row=2, padx=padx, pady=pady)
+        cropButton.grid(column=0, row=5, padx=padx, pady=pady)
         cropWindow.mainloop()
 
     cropWindowButton = t.Button(enhanceWindow, text="Crop Menu", fg=fg, bg=bg)
     cropWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                command=cropButtonPushed)
     cropWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
-    return row +1
+    return row + 1
 
 
 def makeImageStitchButton(column, row):
@@ -222,6 +257,7 @@ def makeImageStitchButton(column, row):
     :param row: row to place button
     :return: int row updated, increased by 1
     """
+
     def stitchButtonPushed():
         """
         when the stitch button is pushed we want to open another window that asks for the
@@ -236,9 +272,18 @@ def makeImageStitchButton(column, row):
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
                               "Enter a output file Name without\nextension. Images chosen will be\nstitched together.")
+        nameLabel = t.Label(stitchWindow, text="Enter image name", fg=fg, bg=titleBg)
+        nameLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        nameLabel.grid(column=0, row=1, padx=padx, pady=pady)
         name = t.Entry(stitchWindow)
         name.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        name.grid(column=0, row=1)
+        name.grid(column=0, row=2)
+        folderLabel = t.Label(stitchWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
+        folder = t.Entry(stitchWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=4)
 
         def stitchPushed():
             """
@@ -246,7 +291,14 @@ def makeImageStitchButton(column, row):
             :return:
             """
             listOfNames = getFilesInDrop()
-            images=[]
+            images = []
+            if len(folder.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a folder")
+                return
+            status = folderCheckCreation(folder.get())
+            if not status:
+                messagebox.showinfo("ERROR", "Directory not found and could not be created")
+                return
             if len(name.get()) < 1:
                 messagebox.showinfo("ERROR", "Enter Image Name")
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
@@ -255,7 +307,7 @@ def makeImageStitchButton(column, row):
             else:
                 toStitch = listOfNames
             for i in toStitch:
-                image = cv2.imread(dir.get() + "\\"+ i)
+                image = cv2.imread(dir.get() + "\\" + i)
                 images.append(image)
                 stitcher = cv2.Stitcher_create() if imutils.is_cv3() else cv2.Stitcher_create()
                 (status, stitched) = stitcher.stitch(images)
@@ -264,7 +316,7 @@ def makeImageStitchButton(column, row):
                 # stitching
                 if status == 0:
                     # write the output stitched image to disk
-                    cv2.imwrite(dir.get() + "\\stiched"+ name.get() + ".tif")
+                    cv2.imwrite(folder.get() + "\\" + name.get() + ".tif")
                     img = cv2.resize(stitched, (964, 922))
                     # display the output stitched image to our screen
                     cv2.imshow("Stitched", img)
@@ -277,17 +329,17 @@ def makeImageStitchButton(column, row):
             getFiles()
             stitchWindow.destroy()
 
-        cropButton = t.Button(stitchWindow, text="Stitch", fg=fg, bg=bg)
-        cropButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+        stitchButton = t.Button(stitchWindow, text="Stitch", fg=fg, bg=bg)
+        stitchButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                              command=stitchPushed)
-        cropButton.grid(column=0, row=2, padx=padx, pady=pady)
+        stitchButton.grid(column=0, row=5, padx=padx, pady=pady)
         stitchWindow.mainloop()
 
     stitchWindowButton = t.Button(enhanceWindow, text="Stitch Menu", fg=fg, bg=bg)
     stitchWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                               command=stitchButtonPushed)
+                                 command=stitchButtonPushed)
     stitchWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
-    return row +1
+    return row + 1
 
 
 def makeImageRegButton(column, row):
@@ -312,18 +364,18 @@ def makeImageRegButton(column, row):
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
                               "Enter a output file Name without\nextension. Images chosen will be\nstitched together.")
-        folderLabel = t.Label(regWindow, text="Enter folder", fg=fg, bg=titleBg)
-        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
-        folderLabel.grid(column=0, row=1, padx=padx, pady=pady)
-        folder = t.Entry(regWindow)
-        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        folder.grid(column=0, row=2)
         mainImgLabel = t.Label(regWindow, text="Enter Main Image", fg=fg, bg=titleBg)
         mainImgLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
-        mainImgLabel.grid(column=0, row=3, padx=padx, pady=pady)
+        mainImgLabel.grid(column=0, row=1, padx=padx, pady=pady)
         mainImg = t.Entry(regWindow)
         mainImg.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        mainImg.grid(column=0, row=4)
+        mainImg.grid(column=0, row=2)
+        folderLabel = t.Label(regWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
+        folder = t.Entry(regWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=4)
 
         def regPushed():
             """
@@ -332,13 +384,18 @@ def makeImageRegButton(column, row):
             """
             listOfNames = getFilesInDrop()
             images = []
-            if len(folder.get()) < 1 or len(mainImg.get())<1:
+            if len(folder.get()) < 1 or len(mainImg.get()) < 1:
                 messagebox.showinfo("ERROR", "Enter a folder and main image")
+                return
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
             else:
                 toReg = listOfNames
+            status = folderCheckCreation(folder.get())
+            if not status:
+                messagebox.showinfo("ERROR", "Directory not found and could not be created")
+                return
             for x in range(1, len(toReg)):
                 MAX_FEATURES = 500
                 GOOD_MATCH_PERCENT = 0.05
@@ -392,14 +449,72 @@ def makeImageRegButton(column, row):
 
         regButton = t.Button(regWindow, text="Register", fg=fg, bg=bg)
         regButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                             command=regPushed)
+                            command=regPushed)
         regButton.grid(column=0, row=5, padx=padx, pady=pady)
         regWindow.mainloop()
 
     regWindowButton = t.Button(enhanceWindow, text="Register Menu", fg=fg, bg=bg)
     regWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                                 command=regButtonPushed)
+                              command=regButtonPushed)
     regWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row + 1
+
+
+def makePCAButton(column, row):
+    """
+    makes button to preform on imagages, and action even for button
+    :param column: column to place button
+    :param row: row to place button
+    :return: int row updated, increased by 1
+    """
+
+    def PCAButtonPushed():
+        """
+        when the PCA menu button is pushed we want to open another window that asks for the
+        name of the folder to put images in to, then executes PCA
+        :return:
+        """
+        PCAWindow = t.Toplevel(enhanceWindow)
+        PCAWindow.geometry("300x300")
+        PCAWindow.title("Image Stitching")
+        PCAWindow.iconbitmap("imagesForGUI\\bitchlasagna.ico")
+        scrollInstruct = scrolledtext.ScrolledText(PCAWindow, width=35, height=5)
+        scrollInstruct.grid(column=0, row=0)
+        scrollInstruct.insert(t.INSERT,
+                              "Enter a output file Name without\nextension. Images chosen will be\nstitched together.")
+        folderLabel = t.Label(PCAWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=1, padx=padx, pady=pady)
+        folder = t.Entry(PCAWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=2)
+
+        def PCAPushed():
+            """
+            Get folder, check that theirs file to PCA
+            :return:
+            """
+            if len(folder.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a folder")
+                return
+            status = folderCheckCreation(folder.get())
+            if not status:
+                messagebox.showinfo("ERROR", "Directory not found and could not be created")
+                return
+            # TODO PCA function
+            getFiles()
+            PCAWindow.destroy()
+
+        pcaButton = t.Button(PCAWindow, text="PCA", fg=fg, bg=bg)
+        pcaButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                            command=PCAPushed)
+        pcaButton.grid(column=0, row=5, padx=padx, pady=pady)
+        PCAWindow.mainloop()
+
+    pcaWindowButton = t.Button(enhanceWindow, text="PCA Menu", fg=fg, bg=bg)
+    pcaWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                              command=PCAButtonPushed)
+    pcaWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
     return row + 1
 
 
@@ -414,6 +529,7 @@ def makeImageConnectionsButtons(column):
     row = makeCropButton(column, row)
     row = makeImageStitchButton(column, row)
     row = makeImageRegButton(column, row)
+    row = makePCAButton(column, row)
 
 
 # row = makeImageRegButton(column, row)
