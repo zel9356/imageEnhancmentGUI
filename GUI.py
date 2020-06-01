@@ -916,12 +916,12 @@ def makeEqualizeButton(column, row):
 
         equalPreviewButton = t.Button(equalWindow, text="Preview", fg=fg, bg=bg)
         equalPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
-                                          relief=buttonRelief,
-                                          command=previewPushed)
+                                     relief=buttonRelief,
+                                     command=previewPushed)
         equalPreviewButton.grid(column=0, row=3, padx=padx, pady=pady)
         equalButton = t.Button(equalWindow, text="Equalize", fg=fg, bg=bg)
         equalButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                                   command=equalPushed)
+                              command=equalPushed)
         equalButton.grid(column=0, row=4, padx=padx, pady=pady)
         equalWindow.mainloop()
 
@@ -948,7 +948,7 @@ def makeColorizeButton(column, row):
         :return:
         """
         colorWindow = t.Toplevel(enhanceWindow)
-        colorWindow.geometry("300x300")
+        colorWindow.geometry("300x400")
         colorWindow.title("Colorize")
         colorWindow.iconbitmap("imagesForGUI\\bitchlasagna.ico")
         scrollInstruct = scrolledtext.ScrolledText(colorWindow, width=35, height=5)
@@ -983,7 +983,7 @@ def makeColorizeButton(column, row):
             :return:
             """
             listOfNames = getFilesInDrop()
-            if len(colorOne.get()) == 0 or len(colorTwo.get())==0:
+            if len(colorOne.get()) == 0 or len(colorTwo.get()) == 0:
                 messagebox.showinfo("ERROR", "Enter a valid color")
                 return
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
@@ -1023,16 +1023,16 @@ def makeColorizeButton(column, row):
 
         equalPreviewButton = t.Button(colorWindow, text="Preview", fg=fg, bg=bg)
         equalPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
-                                          relief=buttonRelief,
-                                          command=previewPushed)
+                                     relief=buttonRelief,
+                                     command=previewPushed)
         equalPreviewButton.grid(column=0, row=7, padx=padx, pady=pady)
-        equalButton = t.Button(colorWindow, text="Solarize", fg=fg, bg=bg)
+        equalButton = t.Button(colorWindow, text="Colorize", fg=fg, bg=bg)
         equalButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                                   command=colorPushed)
+                              command=colorPushed)
         equalButton.grid(column=0, row=8, padx=padx, pady=pady)
         colorWindow.mainloop()
 
-    brightnessWindowButton = t.Button(enhanceWindow, text="Solarize Menu", fg=fg, bg=bg)
+    brightnessWindowButton = t.Button(enhanceWindow, text="Colorize Menu", fg=fg, bg=bg)
     brightnessWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                      command=colorWindowPushed)
     brightnessWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
@@ -1083,7 +1083,7 @@ def makeSolarizeButton(column, row):
             :return:
             """
             listOfNames = getFilesInDrop()
-            if len(threshold.get()) == 0 or int(threshold.get()) < 0 or int(threshold.get())>256:
+            if len(threshold.get()) == 0 or int(threshold.get()) < 0 or int(threshold.get()) > 256:
                 messagebox.showinfo("ERROR", "Enter a valid factor")
                 return
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
@@ -1110,7 +1110,7 @@ def makeSolarizeButton(column, row):
             :return:
             """
             listOfNames = getFilesInDrop()
-            if len(threshold.get()) == 0 or int(threshold.get()) < 0 or int(threshold.get())>256:
+            if len(threshold.get()) == 0 or int(threshold.get()) < 0 or int(threshold.get()) > 256:
                 messagebox.showinfo("ERROR", "Enter a valid factor")
                 return
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
@@ -1123,18 +1123,358 @@ def makeSolarizeButton(column, row):
 
         equalPreviewButton = t.Button(solarWindow, text="Preview", fg=fg, bg=bg)
         equalPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
-                                          relief=buttonRelief,
-                                          command=previewPushed)
+                                     relief=buttonRelief,
+                                     command=previewPushed)
         equalPreviewButton.grid(column=0, row=5, padx=padx, pady=pady)
         equalButton = t.Button(solarWindow, text="Solarize", fg=fg, bg=bg)
         equalButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                                   command=solarPushed)
+                              command=solarPushed)
         equalButton.grid(column=0, row=6, padx=padx, pady=pady)
         solarWindow.mainloop()
 
     brightnessWindowButton = t.Button(enhanceWindow, text="Solarize Menu", fg=fg, bg=bg)
     brightnessWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                      command=solarizeWindowPushed)
+    brightnessWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row + 1
+
+
+def makeThresholdButton(column, row):
+    """
+    Makes button to open threshold menu, when its pressed the threshold menu is opened
+    :param column: column to place button
+    :param row: row to place button
+    :return: int row updated, increased by 1
+    """
+
+    def threshWindowPushed():
+        """
+        Places instructions for threshold, a label and entry box for the factor, a label and
+        entry for a folder a preview button and a contrast
+        button to preform the alterations
+        :return:
+        """
+        threshWindow = t.Toplevel(enhanceWindow)
+        threshWindow.geometry("300x400")
+        threshWindow.title("Colorize")
+        threshWindow.iconbitmap("imagesForGUI\\bitchlasagna.ico")
+        scrollInstruct = scrolledtext.ScrolledText(threshWindow, width=35, height=5)
+        scrollInstruct.grid(column=0, row=0)
+        scrollInstruct.insert(t.INSERT,
+                              "In thresholding if the pixel value is smaller than the threshold, it is set to 0, "
+                              "otherwise it is set to a maximum value. The function cv.threshold is used to apply "
+                              "the thresholding. Threshold is the threshold value which is used to classify the pixel "
+                              "values. Max is the maximum value which is assigned to pixel values exceeding the "
+                              "threshold. Choose one or more thresholding methods\nEnter a folder path to place "
+                              "the\nresults in. Right click for more information")
+        # can select types of thrsholding
+        stateOfBinary = t.BooleanVar()
+        stateOfBinary.set(True)
+        stateOfInvBinary = t.BooleanVar()
+        stateOfInvBinary.set(False)
+        stateOfToZero = t.BooleanVar()
+        stateOfToZero.set(False)
+        stateOfInvZero = t.BooleanVar()
+        stateOfInvZero.set(False)
+        stateOfTrunc = t.BooleanVar()
+        stateOfTrunc.set(False)
+        binary = ttk.Checkbutton(threshWindow, text="Binary", var=stateOfBinary)
+        binary.grid(column=0, row=1,padx=padx)
+        inverseBinary = ttk.Checkbutton(threshWindow, text="Inverse Binary", var=stateOfInvBinary)
+        inverseBinary.grid(column=0, row=2, padx=padx)
+        toZero = ttk.Checkbutton(threshWindow, text="To Zero", var=stateOfToZero)
+        toZero.grid(column=0, row=3, padx=padx)
+        inverseToZero = ttk.Checkbutton(threshWindow, text="Inverse to Zero", var=stateOfInvZero)
+        inverseToZero.grid(column=0, row=4, padx=padx)
+        trunc = ttk.Checkbutton(threshWindow, text="Trunc", var=stateOfTrunc)
+        trunc.grid(column=0, row=5, padx=padx)
+
+        thresholdLabel = t.Label(threshWindow, text="Enter Threshold", fg=fg, bg=titleBg)
+        thresholdLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        thresholdLabel.grid(column=0, row=6, padx=padx, pady=pady)
+        threshold = t.Entry(threshWindow)
+        threshold.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        threshold.grid(column=0, row=7)
+        maxLabel = t.Label(threshWindow, text="Enter Max Value", fg=fg, bg=titleBg)
+        maxLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        maxLabel.grid(column=0, row=8, padx=padx, pady=pady)
+        max = t.Entry(threshWindow)
+        max.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        max.grid(column=0, row=9)
+        folderLabel = t.Label(threshWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=10, padx=padx, pady=pady)
+        folder = t.Entry(threshWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=11)
+
+        def threshPushed():
+            """
+            Get folder, check that theirs file to PCA
+            :return:
+            """
+            listOfNames = getFilesInDrop()
+            if len(threshold.get()) == 0 or len(max.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a valid color")
+                return
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            if len(folder.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a folder")
+                return
+            status = folderCheckCreation(folder.get())
+            if not status:
+                messagebox.showinfo("ERROR", "Directory not found and could not be created")
+                return
+            for i in listOfNames:
+                print("AHHHH")
+            # TODO PCA function
+            getFiles()
+            threshWindow.destroy()
+
+        def previewPushed():
+            """
+            Allow user to see the first image in the dir with a the brightness factor applied
+            :return:
+            """
+            listOfNames = getFilesInDrop()
+            if len(threshold.get()) == 0 or len(max.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a valid color")
+                return
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+
+            #image2.show()
+
+        equalPreviewButton = t.Button(threshWindow, text="Preview", fg=fg, bg=bg)
+        equalPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
+                                     relief=buttonRelief,
+                                     command=previewPushed)
+        equalPreviewButton.grid(column=0, row=12, padx=padx, pady=pady)
+        equalButton = t.Button(threshWindow, text="Threshold", fg=fg, bg=bg)
+        equalButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                              command=threshPushed)
+        equalButton.grid(column=0, row=13, padx=padx, pady=pady)
+        threshWindow.mainloop()
+
+    brightnessWindowButton = t.Button(enhanceWindow, text="Threshold Menu", fg=fg, bg=bg)
+    brightnessWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                                     command=threshWindowPushed)
+    brightnessWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row + 1
+
+def makeEdgeDetectButton(column, row):
+    """
+    Makes button to open brightness menu, when its pressed the brightness menu is opened
+    :param column: column to place button
+    :param row: row to place button
+    :return: int row updated, increased by 1
+    """
+
+    def colorWindowPushed():
+        """
+        Places instructions for contrast, a label and entry box for the factor, a label and
+        entry for a folder a preview button and a contrast
+        button to preform the alterations
+        :return:
+        """
+        colorWindow = t.Toplevel(enhanceWindow)
+        colorWindow.geometry("300x400")
+        colorWindow.title("Colorize")
+        colorWindow.iconbitmap("imagesForGUI\\bitchlasagna.ico")
+        scrollInstruct = scrolledtext.ScrolledText(colorWindow, width=35, height=5)
+        scrollInstruct.grid(column=0, row=0)
+        scrollInstruct.insert(t.INSERT,
+                              "Colorize grayscale image function calculates a color wedge mapping all black pixels in "
+                              "the source image to the "
+                              "first color, and all white pixels to the second color.\nEnter a folder path to place "
+                              "the\nresults in.")
+        colorOneLabel = t.Label(colorWindow, text="Enter first color", fg=fg, bg=titleBg)
+        colorOneLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        colorOneLabel.grid(column=0, row=1, padx=padx, pady=pady)
+        colorOne = t.Entry(colorWindow)
+        colorOne.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        colorOne.grid(column=0, row=2)
+        colorTwoLabel = t.Label(colorWindow, text="Enter first color", fg=fg, bg=titleBg)
+        colorTwoLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        colorTwoLabel.grid(column=0, row=3, padx=padx, pady=pady)
+        colorTwo = t.Entry(colorWindow)
+        colorTwo.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        colorTwo.grid(column=0, row=4)
+        folderLabel = t.Label(colorWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=5, padx=padx, pady=pady)
+        folder = t.Entry(colorWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=6)
+
+        def colorPushed():
+            """
+            Get folder, check that theirs file to PCA
+            :return:
+            """
+            listOfNames = getFilesInDrop()
+            if len(colorOne.get()) == 0 or len(colorTwo.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a valid color")
+                return
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            if len(folder.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a folder")
+                return
+            status = folderCheckCreation(folder.get())
+            if not status:
+                messagebox.showinfo("ERROR", "Directory not found and could not be created")
+                return
+            for i in listOfNames:
+                image1 = Image.open(dir.get() + "\\" + i)
+                image2 = ImageOps.colorize(image1, colorOne, colorTwo)
+                image2.save(folder.get() + "\\-equalized-" + i)
+            # TODO PCA function
+            getFiles()
+            colorWindow.destroy()
+
+        def previewPushed():
+            """
+            Allow user to see the first image in the dir with a the brightness factor applied
+            :return:
+            """
+            listOfNames = getFilesInDrop()
+            if len(colorOne.get()) == 0 or len(colorTwo.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a valid color")
+                return
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+            image2 = ImageOps.colorize(image1, colorOne, colorTwo)
+            # equal to image two
+            image2.show()  # display image 2
+
+        equalPreviewButton = t.Button(colorWindow, text="Preview", fg=fg, bg=bg)
+        equalPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
+                                     relief=buttonRelief,
+                                     command=previewPushed)
+        equalPreviewButton.grid(column=0, row=7, padx=padx, pady=pady)
+        equalButton = t.Button(colorWindow, text="Colorize", fg=fg, bg=bg)
+        equalButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                              command=colorPushed)
+        equalButton.grid(column=0, row=8, padx=padx, pady=pady)
+        colorWindow.mainloop()
+
+    brightnessWindowButton = t.Button(enhanceWindow, text="Colorize Menu", fg=fg, bg=bg)
+    brightnessWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                                     command=colorWindowPushed)
+    brightnessWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row + 1
+
+def makeGradientButton(column, row):
+    """
+    Makes button to open brightness menu, when its pressed the brightness menu is opened
+    :param column: column to place button
+    :param row: row to place button
+    :return: int row updated, increased by 1
+    """
+
+    def colorWindowPushed():
+        """
+        Places instructions for contrast, a label and entry box for the factor, a label and
+        entry for a folder a preview button and a contrast
+        button to preform the alterations
+        :return:
+        """
+        colorWindow = t.Toplevel(enhanceWindow)
+        colorWindow.geometry("300x400")
+        colorWindow.title("Colorize")
+        colorWindow.iconbitmap("imagesForGUI\\bitchlasagna.ico")
+        scrollInstruct = scrolledtext.ScrolledText(colorWindow, width=35, height=5)
+        scrollInstruct.grid(column=0, row=0)
+        scrollInstruct.insert(t.INSERT,
+                              "Colorize grayscale image function calculates a color wedge mapping all black pixels in "
+                              "the source image to the "
+                              "first color, and all white pixels to the second color.\nEnter a folder path to place "
+                              "the\nresults in.")
+        colorOneLabel = t.Label(colorWindow, text="Enter first color", fg=fg, bg=titleBg)
+        colorOneLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        colorOneLabel.grid(column=0, row=1, padx=padx, pady=pady)
+        colorOne = t.Entry(colorWindow)
+        colorOne.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        colorOne.grid(column=0, row=2)
+        colorTwoLabel = t.Label(colorWindow, text="Enter first color", fg=fg, bg=titleBg)
+        colorTwoLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        colorTwoLabel.grid(column=0, row=3, padx=padx, pady=pady)
+        colorTwo = t.Entry(colorWindow)
+        colorTwo.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        colorTwo.grid(column=0, row=4)
+        folderLabel = t.Label(colorWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=5, padx=padx, pady=pady)
+        folder = t.Entry(colorWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=6)
+
+        def colorPushed():
+            """
+            Get folder, check that theirs file to PCA
+            :return:
+            """
+            listOfNames = getFilesInDrop()
+            if len(colorOne.get()) == 0 or len(colorTwo.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a valid color")
+                return
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            if len(folder.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a folder")
+                return
+            status = folderCheckCreation(folder.get())
+            if not status:
+                messagebox.showinfo("ERROR", "Directory not found and could not be created")
+                return
+            for i in listOfNames:
+                image1 = Image.open(dir.get() + "\\" + i)
+                image2 = ImageOps.colorize(image1, colorOne, colorTwo)
+                image2.save(folder.get() + "\\-equalized-" + i)
+            # TODO PCA function
+            getFiles()
+            colorWindow.destroy()
+
+        def previewPushed():
+            """
+            Allow user to see the first image in the dir with a the brightness factor applied
+            :return:
+            """
+            listOfNames = getFilesInDrop()
+            if len(colorOne.get()) == 0 or len(colorTwo.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a valid color")
+                return
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+            image2 = ImageOps.colorize(image1, colorOne, colorTwo)
+            # equal to image two
+            image2.show()  # display image 2
+
+        equalPreviewButton = t.Button(colorWindow, text="Preview", fg=fg, bg=bg)
+        equalPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
+                                     relief=buttonRelief,
+                                     command=previewPushed)
+        equalPreviewButton.grid(column=0, row=7, padx=padx, pady=pady)
+        equalButton = t.Button(colorWindow, text="Colorize", fg=fg, bg=bg)
+        equalButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                              command=colorPushed)
+        equalButton.grid(column=0, row=8, padx=padx, pady=pady)
+        colorWindow.mainloop()
+
+    brightnessWindowButton = t.Button(enhanceWindow, text="Colorize Menu", fg=fg, bg=bg)
+    brightnessWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                                     command=colorWindowPushed)
     brightnessWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
     return row + 1
 
@@ -1154,13 +1494,12 @@ def makeImageConnectionsButtons(column):
     return column + 1
 
 
-def makeImageAffectButtons(column):
+def makePillowImageButtons(column):
     """
-    This column effects indivdual images rather than comining the whole in some way.
-    This inculdes Contrast, Brightness, sharpness, equalize, solarize(invert pixels) maybe colorize
-    openCV, threshold, edge dection, gradients
-    :param column:
-    :return:
+    This column effects individual images rather than combining the whole in some way.
+    This include the Pillow methods: Contrast, Brightness, sharpness, equalize, solarize(invert pixels) maybe colorize
+    :param column: the column the buttons are going to be placed in
+    :return: int of updated column, column + 1
     """
     row = 0
     row = makeBrightnessButton(column, row)
@@ -1168,9 +1507,21 @@ def makeImageAffectButtons(column):
     row = makeSharpnessButton(column, row)
     row = makeEqualizeButton(column, row)
     row = makeSolarizeButton(column, row)
-    row = makeColorizeButton()
+    row = makeColorizeButton(column, row)
     return column + 1
 
+def makeOpenCVImageButtons(column):
+    """
+    This column effects individual images rather than combining the whole in some way.
+    This includes the OpenCV methods: threshold, edge detection, gradients
+    :param column: the column the buttons are going to be placed in
+    :return: int of updated column, column + 1
+    """
+    row = 0
+    row = makeThresholdButton(column, row)
+    row = makeEdgeDetectButton(column, row)
+    row = makeGradientButton(column, row)
+    return column + 1
 
 # row = makeImageRegButton(column, row)
 # row = makePCAButton(column, row)
@@ -1183,7 +1534,8 @@ def makeWidgets():
     makeHelpMenu()
     column = makeFileColumn(column)
     column = makeImageConnectionsButtons(column)
-    column = makeImageAffectButtons(column)
+    column = makePillowImageButtons(column)
+    column = makeOpenCVImageButtons(column)
 
 
 def main():
