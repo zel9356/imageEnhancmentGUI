@@ -62,11 +62,19 @@ def makeHelpMenu():
         helpWindow = t.Toplevel(enhanceWindow)
         helpWindow.geometry("300x300")
         helpWindow.title("Help")
-        helpWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        helpWindow.iconbitmap("imagesForGUI\\helpMenu.ico")
         scrollInstruct = scrolledtext.ScrolledText(helpWindow, width=50, height=50)
         scrollInstruct.pack()
         # TODO add instructions
-        scrollInstruct.insert(t.INSERT, "ADD SOME INSTRUCTIONS")
+        scrollInstruct.insert(t.INSERT, "Enter a full path directory to a folder of tif/tiff images. Clicking the "
+                                        "load button will load and tif/tiff images in that folder not within another "
+                                        "folder.\nSelecting 'All' in the first drop down box will cause all images in" 
+                                        " the folder to be used for enhancement or analysis. Repeat selected images "
+                                        "will be ignored\nClicking an image enhancement button will open up another "
+                                        "window asking for any need parameters and will allow the user to preview the "
+                                        "first image in the column of image drop downs. All will ask for an out folder"
+                                        "to put the resultant image in.\nIf the folder does not exist it will be "
+                                        "created if possible.")
         helpWindow.mainloop()
 
     enhanceWindow.bind("<Button-3>", rightClick)
@@ -151,7 +159,7 @@ def makeFileColumn(column):
     dir.grid(column=column, row=1)
     blankLabel.grid(column=column, row=2)
 
-    loadFilesButton = t.Button(enhanceWindow, text="GO", fg=fg, bg=bg)
+    loadFilesButton = t.Button(enhanceWindow, text="Load Images", fg=fg, bg=bg)
     loadFilesButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                               command=getFiles)
     loadFilesButton.grid(column=column, row=2, padx=padx, pady=pady)
@@ -270,7 +278,7 @@ def makeImageStitchButton(column, row):
         stitchWindow = t.Toplevel(enhanceWindow)
         stitchWindow.geometry("300x300")
         stitchWindow.title("Image Stitching")
-        stitchWindow.iconbitmap("imagesForGUI\\imagestiching.ico")
+        stitchWindow.iconbitmap("imagesForGUI\\imagestitching.ico")
         scrollInstruct = scrolledtext.ScrolledText(stitchWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
@@ -490,7 +498,7 @@ def makePCAButton(column, row):
         PCAWindow = t.Toplevel(enhanceWindow)
         PCAWindow.geometry("300x300")
         PCAWindow.title("PCA")
-        PCAWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        PCAWindow.iconbitmap("imagesForGUI\\PCA3DSpace.ico")
         scrollInstruct = scrolledtext.ScrolledText(PCAWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
@@ -732,7 +740,7 @@ def makeContrastButton(column, row):
         contrastButton.grid(column=0, row=6, padx=padx, pady=pady)
         contrastWindow.mainloop()
 
-    contrastWindowButton = t.Button(enhanceWindow, text="Brightness Menu", fg=fg, bg=bg)
+    contrastWindowButton = t.Button(enhanceWindow, text="Contrast Menu", fg=fg, bg=bg)
     contrastWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                    command=constrastWindowPushed)
     contrastWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
@@ -756,8 +764,7 @@ def makeSharpnessButton(column, row):
         sharpWindow = t.Toplevel(enhanceWindow)
         sharpWindow.geometry("300x300")
         sharpWindow.title("Sharpness")
-        # TODO change icon image
-        sharpWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        sharpWindow.iconbitmap("imagesForGUI\\sharpness.ico")
         scrollInstruct = scrolledtext.ScrolledText(sharpWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
@@ -859,7 +866,7 @@ def makeEqualizeButton(column, row):
         equalWindow = t.Toplevel(enhanceWindow)
         equalWindow.geometry("300x300")
         equalWindow.title("Equalize")
-        equalWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        equalWindow.iconbitmap("imagesForGUI\\equalize.ico")
         scrollInstruct = scrolledtext.ScrolledText(equalWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
@@ -944,7 +951,7 @@ def makeColorizeButton(column, row):
         colorWindow = t.Toplevel(enhanceWindow)
         colorWindow.geometry("300x600")
         colorWindow.title("Colorize")
-        colorWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        colorWindow.iconbitmap("imagesForGUI\\colorize.ico")
         scrollInstruct = scrolledtext.ScrolledText(colorWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
@@ -1097,7 +1104,7 @@ def makeSolarizeButton(column, row):
         solarWindow = t.Toplevel(enhanceWindow)
         solarWindow.geometry("300x300")
         solarWindow.title("Solarize")
-        solarWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        solarWindow.iconbitmap("imagesForGUI\\solarize.ico")
         scrollInstruct = scrolledtext.ScrolledText(solarWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
@@ -1211,7 +1218,9 @@ def makeAndCheckThreshFolders(folder, stateOfBinary, stateOfInvBinary, stateOfTo
         if not status:
             return status
     return status
-def makeAndCheckGradientFolders(folder, stateOfSobelX,stateOfSobelY, stateOfScharrX, stateOfScharrY, stateOfLap):
+
+
+def makeAndCheckGradientFolders(folder, stateOfSobelX, stateOfSobelY, stateOfScharrX, stateOfScharrY, stateOfLap):
     """
     Once the directory for thresholding os created individual folders for each type selected are mad if not already there
     :param folder: folder to put/ look for folders
@@ -1219,23 +1228,26 @@ def makeAndCheckGradientFolders(folder, stateOfSobelX,stateOfSobelY, stateOfScha
     :param stateOfLap: state of corresponding check box
     """
     status = True
-    if stateOfSobelX.get():
+    status = folderCheckCreation(folder)
+    if not status:
+        return status
+    if stateOfSobelX:
         status = folderCheckCreation(folder + "\\" + "Sobel-x")
         if not status:
             return status
-    if stateOfSobelY.get():
+    if stateOfSobelY:
         status = folderCheckCreation(folder + "\\" + "Sobel-y")
         if not status:
             return status
-    if stateOfScharrX.get():
+    if stateOfScharrX:
         status = folderCheckCreation(folder + "\\" + "Scharr-x")
         if not status:
             return status
-    if stateOfScharrY.get():
+    if stateOfScharrY:
         status = folderCheckCreation(folder + "\\" + "Scharr-y")
         if not status:
             return status
-    if stateOfLap.get():
+    if stateOfLap:
         status = folderCheckCreation(folder + "\\" + "Laplacian")
         if not status:
             return status
@@ -1258,13 +1270,13 @@ def makeThresholdButton(column, row):
         threshWindow = t.Toplevel(enhanceWindow)
         threshWindow.geometry("300x400")
         threshWindow.title("Threshold")
-        threshWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        threshWindow.iconbitmap("imagesForGUI\\threshold.ico")
 
         def rightClick(event):
             helpThreshWindow = t.Toplevel(threshWindow)
             helpThreshWindow.geometry("800x600")
             helpThreshWindow.title("Help")
-            helpThreshWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+            helpThreshWindow.iconbitmap("imagesForGUI\\helpMenu.ico")
             photo = t.PhotoImage(file="imagesForGUI\\thresholdmethods.GIF")
             lab = t.Label(helpThreshWindow, image=photo)
             lab.pack()
@@ -1400,18 +1412,18 @@ def makeThresholdButton(column, row):
 
         thresholdPreviewButton = t.Button(threshWindow, text="Preview", fg=fg, bg=bg)
         thresholdPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
-                                     relief=buttonRelief,
-                                     command=previewPushed)
+                                         relief=buttonRelief,
+                                         command=previewPushed)
         thresholdPreviewButton.grid(column=0, row=12, padx=padx, pady=pady)
         thresholdsButton = t.Button(threshWindow, text="Threshold", fg=fg, bg=bg)
         thresholdsButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                              command=threshPushed)
+                                   command=threshPushed)
         thresholdsButton.grid(column=0, row=13, padx=padx, pady=pady)
         threshWindow.mainloop()
 
     thresholdWindowButton = t.Button(enhanceWindow, text="Threshold Menu", fg=fg, bg=bg)
     thresholdWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                                     command=threshWindowPushed)
+                                    command=threshWindowPushed)
     thresholdWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
     return row + 1
 
@@ -1432,13 +1444,13 @@ def makeEdgeDetectButton(column, row):
         edgeWindow = t.Toplevel(enhanceWindow)
         edgeWindow.geometry("300x450")
         edgeWindow.title("Edge Detection")
-        edgeWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        edgeWindow.iconbitmap("imagesForGUI\\edgeDetection.ico")
 
         def rightClick(event):
             helpEdgeWindow = t.Toplevel(edgeWindow)
             helpEdgeWindow.geometry("800x1000")
             helpEdgeWindow.title("Help")
-            helpEdgeWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+            helpEdgeWindow.iconbitmap("imagesForGUI\\helpMenu.ico")
             photo = t.PhotoImage(file="imagesForGUI\\edgedection.GIF")
             lab = t.Label(helpEdgeWindow, image=photo)
             lab.pack()
@@ -1452,11 +1464,11 @@ def makeEdgeDetectButton(column, row):
         scrollInstruct = scrolledtext.ScrolledText(edgeWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
-                              "Edge detection requires a two thresholds. It also requires an aperture_size. "
-                              "It is the size of Sobel kernel used for find image gradients. 2gradient specifies "
-                              "the equation for finding gradient magnitude. If it is selected, it uses the equation "
-                              "mentioned above which is more accurate, otherwise it uses this function: "
-                              "Edge_Gradient(G)=|Gx|+|Gy|. By default, it is False.\nEnter a folder path to place "
+                              "Edge detection requires a two\nthresholds. It also requires an\naperture_size. "
+                              "It is the size of\nSobel kernel used for find image\ngradients. 2gradient specifies "
+                              "the\nequation for finding gradient\nmagnitude. If it is selected, it\nuses a more "
+                              "accurate equation,\notherwise it uses this function:"
+                              "\nEdge_Gradient(G)=|Gx|+|Gy|.\nEnter a folder path to place "
                               "the\nresults in.")
         t1Label = t.Label(edgeWindow, text="Enter minVal", fg=fg, bg=titleBg)
         t1Label.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
@@ -1503,13 +1515,14 @@ def makeEdgeDetectButton(column, row):
                 messagebox.showinfo("ERROR", "Enter a axVal value")
                 return
             if len(aptVal.get()) != 0:
-                if aptVal.get() % 2 == 1 and 8 > aptVal.get() > 2:
-                    aperture = int(aptVal.get())
+                aperture = int(aptVal.get())
+                if aperture % 2 == 0 and 8 < aperture < 2:
+                    messagebox.showinfo("ERROR", "Enter a valid aperture value (3, 5, 7)")
+                    return
             else:
                 aperture = 3
             t1 = float(threshold1.get())
             t2 = float(threshold2.get())
-            apture = int(aptVal.get())
             if len(folder.get()) == 0:
                 messagebox.showinfo("ERROR", "Enter a folder")
                 return
@@ -1519,8 +1532,8 @@ def makeEdgeDetectButton(column, row):
                 return
             for i in listOfNames:
                 image1 = cv2.imread(dir.get() + "\\" + i)
-                image2 = cv2.Canny(image1, t2, t1, stateOfChk.get(), apture)
-                image2.save(folder.get() + "\\-edgeDetect-" + i)
+                image2 = cv2.Canny(image1, t2, t1, stateOfChk.get(), aperture)
+                cv2.imwrite(folder.get() + "\\-edgeDetect-" + i, image2)
             getFiles()
             edgeWindow.destroy()
 
@@ -1540,8 +1553,10 @@ def makeEdgeDetectButton(column, row):
                 messagebox.showinfo("ERROR", "Enter a second threshold value")
                 return
             if len(aptVal.get()) != 0:
-                if aptVal.get() % 2 == 1 and 8 > aptVal.get() > 2:
-                    aperture = int(aptVal.get())
+                aperture = int(aptVal.get())
+                if aperture % 2 == 0 and 8 < aperture < 2:
+                    messagebox.showinfo("ERROR", "Enter a valid aperture value (3, 5, 7)")
+                    return
             else:
                 aperture = 3
             t1 = float(threshold1.get())
@@ -1554,12 +1569,12 @@ def makeEdgeDetectButton(column, row):
 
         edgePreviewButton = t.Button(edgeWindow, text="Preview", fg=fg, bg=bg)
         edgePreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
-                                     relief=buttonRelief,
-                                     command=previewPushed)
+                                    relief=buttonRelief,
+                                    command=previewPushed)
         edgePreviewButton.grid(column=0, row=10, padx=padx, pady=pady)
         edgeButton = t.Button(edgeWindow, text="Edge Detection", fg=fg, bg=bg)
         edgeButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                              command=edgePushed)
+                             command=edgePushed)
         edgeButton.grid(column=0, row=11, padx=padx, pady=pady)
         edgeWindow.mainloop()
 
@@ -1586,12 +1601,26 @@ def makeGradientButton(column, row):
         gradientWindow = t.Toplevel(enhanceWindow)
         gradientWindow.geometry("300x400")
         gradientWindow.title("Gradient")
-        gradientWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        gradientWindow.iconbitmap("imagesForGUI\\gradients.ico")
+
+        def rightClick(event):
+            helpGradientWindow = t.Toplevel(gradientWindow)
+            helpGradientWindow.geometry("700x500")
+            helpGradientWindow.title("Help")
+            helpGradientWindow.iconbitmap("imagesForGUI\\helpMenu.ico")
+            photo = t.PhotoImage(file="imagesForGUI\\gradient.GIF")
+            lab = t.Label(helpGradientWindow, image=photo)
+            lab.pack()
+            web = t.Label(helpGradientWindow, text="https://docs.opencv.org/master/d5/d0f/tutorial_py_gradients.html")
+            web.pack()
+            helpGradientWindow.mainloop()
+
+        gradientWindow.bind("<Button-3>", rightClick)
         scrollInstruct = scrolledtext.ScrolledText(gradientWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
-                              "Chooses at least one of the three gradient methods\n Kernel size is the size of the kernel "
-                              "used and is only needed for the sobel method.\nEnter a folder path to place "
+                              "Chooses at least one of the three\ngradient methods. Kernel size is\nthe size of the kernel "
+                              "used and is\nonly needed for the sobel method.\nEnter a folder path to place "
                               "the\nresults in.")
         stateOfSobelX = t.BooleanVar()
         stateOfSobelX.set(False)
@@ -1603,15 +1632,15 @@ def makeGradientButton(column, row):
         stateOfScharrY.set(False)
         stateOfLaplacian = t.BooleanVar()
         stateOfLaplacian.set(False)
-        #stateOfScharr = t.BooleanVar()
-        #stateOfScharr.set(False)
+        # stateOfScharr = t.BooleanVar()
+        # stateOfScharr.set(False)
         sobelBoxX = ttk.Checkbutton(gradientWindow, text="Sobel in x direction", var=stateOfSobelX)
         sobelBoxX.grid(column=0, row=1, padx=padx)
         sobelBoxY = ttk.Checkbutton(gradientWindow, text="Sobel in y direction", var=stateOfSobelY)
         sobelBoxY.grid(column=0, row=2, padx=padx)
-        scharrBoxX = ttk.Checkbutton(gradientWindow, text="Scharr in x direction", var=stateOfSobelX)
+        scharrBoxX = ttk.Checkbutton(gradientWindow, text="Scharr in x direction", var=stateOfScharrX)
         scharrBoxX.grid(column=0, row=3, padx=padx)
-        scharrBoxY = ttk.Checkbutton(gradientWindow, text="Scharr in y direction", var=stateOfSobelY)
+        scharrBoxY = ttk.Checkbutton(gradientWindow, text="Scharr in y direction", var=stateOfScharrY)
         scharrBoxY.grid(column=0, row=4, padx=padx)
         laplacianBox = ttk.Checkbutton(gradientWindow, text="Laplacian", var=stateOfLaplacian)
         laplacianBox.grid(column=0, row=5, padx=padx)
@@ -1637,10 +1666,10 @@ def makeGradientButton(column, row):
             if not stateOfLaplacian.get() and not stateOfSobelX.get() and not stateOfSobelY.get() and not stateOfScharrX.get() and not stateOfScharrY.get():
                 messagebox.showinfo("ERROR", "Choose at least one gradient method")
                 return
-            if (stateOfSobelX.get() or stateOfSobelY.get()) and len(kernel.get())==0:
+            if (stateOfSobelX.get() or stateOfSobelY.get()) and len(kernel.get()) == 0:
                 messagebox.showinfo("ERROR", "Enter a kernel size for Sobel methods")
                 return
-            if len(kernel.get()) not = 0:
+            if len(kernel.get()) > 0:
                 ksize = int(kernel.get())
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
@@ -1648,33 +1677,34 @@ def makeGradientButton(column, row):
             if len(folder.get()) == 0:
                 messagebox.showinfo("ERROR", "Enter a folder")
                 return
-            status = makeAndCheckGradientFolders(folder.get(), stateOfSobelX.get(), stateOfSobelY.get(), stateOfScharrX.get(), stateOfScharrY.get(), stateOfLaplacian())
+            status = makeAndCheckGradientFolders(folder.get(), stateOfSobelX.get(), stateOfSobelY.get(),
+                                                 stateOfScharrX.get(), stateOfScharrY.get(), stateOfLaplacian.get())
             if not status:
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = cv2.read(dir.get() + "\\" + i)
+                image1 = cv2.imread(dir.get() + "\\" + i)
                 if stateOfSobelX.get():
-                    image2 = cv2.Sobel(image1, cv2.CV_64F, 1, 0, ksize)
+                    image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 1, 0, ksize=ksize)
                     cv2.imwrite(folder.get() + "\\Sobel-x\\sobel-x-" + i, image2)
                 if stateOfSobelY.get():
-                    image2 = cv2.Sobel(image1, cv2.CV_64F, 0, 1, ksize)
-                    cv2.imwritefolder.get() + "\\Sobel-y\\sobel-y-" + i, image2)
+                    image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 0, 1, ksize=ksize)
+                    cv2.imwrite(folder.get() + "\\Sobel-y\\sobel-y-" + i, image2)
                 if stateOfScharrX.get():
-                    image2 = cv2.Sobel(image1, cv2.CV_64F, 1, 0, -1)
+                    image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 1, 0, -1)
                     cv2.imwrite(folder.get() + "\\Scharr-x\\scharr-x-" + i, image2)
                 if stateOfScharrY.get():
-                    image2 = cv2.Sobel(image1, cv2.CV_64F, 0, 1, -1)
+                    image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 0, 1, -1)
                     cv2.imwrite(folder.get() + "\\Scharr-y\\scharr-y-" + i, image2)
                 if stateOfLaplacian.get():
-                    image2 = cv2.Laplacian(image1, cv2.CV_64F)
-                    cv2.imwrite(folder.get() + "\\Scharr-x\\scharr-x-" + i, image2)
+                    image2 = cv2.Laplacian(image1, int(-1/cv2.CV_64F))
+                    cv2.imwrite(folder.get() + "\\Laplacian\\laplacian-" + i, image2)
             getFiles()
             gradientWindow.destroy()
 
         def previewPushed():
             """
-            Allow user to see the first image in the dir with a the brightness factor applied
+            Allow user to see the first image in the dir with a the selected gradients applied
             :return:
             """
             listOfNames = getFilesInDrop()
@@ -1684,43 +1714,43 @@ def makeGradientButton(column, row):
             if (stateOfSobelX.get() or stateOfSobelY.get()) and len(kernel.get()) == 0:
                 messagebox.showinfo("ERROR", "Enter a kernel size for Sobel methods")
                 return
-            if len(kernel.get()) not = 0:
+            if len(kernel.get()) > 0:
                 ksize = int(kernel.get())
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
-            for i in listOfNames:
-                image1 = cv2.read(dir.get() + "\\" + i)
-                if stateOfSobelX.get():
-                    image2 = cv2.Sobel(image1, cv2.CV_64F, 1, 0, ksize)
-                    cv2.imshow("Sobel in x direction", image2)
-                if stateOfSobelY.get():
-                    image2 = cv2.Sobel(image1, cv2.CV_64F, 0, 1, ksize)
-                    cv2.imshow("Sobel in y direction", image2)
-                if stateOfScharrX.get():
-                    image2 = cv2.Sobel(image1, cv2.CV_64F, 1, 0, -1)
-                    cv2.imshow("Scharr in x direction", image2)
-                if stateOfScharrY.get():
-                    image2 = cv2.Sobel(image1, cv2.CV_64F, 0, 1, -1)
-                    cv2.imshow("Scharr in y direction", image2)
-                if stateOfLaplacian.get():
-                    image2 = cv2.Laplacian(image1, cv2.CV_64F)
-                    cv2.imshow("Laplacian", image2)
+
+            image1 = cv2.imread(dir.get() + "\\" + listOfNames[0])
+            if stateOfSobelX.get():
+                image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 1, 0, ksize)
+                cv2.imshow("Sobel in x direction", image2)
+            if stateOfSobelY.get():
+                image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 0, 1, ksize)
+                cv2.imshow("Sobel in y direction", image2)
+            if stateOfScharrX.get():
+                image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 1, 0, -1)
+                cv2.imshow("Scharr in x direction", image2)
+            if stateOfScharrY.get():
+                image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 0, 1, -1)
+                cv2.imshow("Scharr in y direction", image2)
+            if stateOfLaplacian.get():
+                image2 = cv2.Laplacian(image1, int(-1/cv2.CV_64F))
+                cv2.imshow("Laplacian", image2)
 
         gradientPreviewButton = t.Button(gradientWindow, text="Preview", fg=fg, bg=bg)
         gradientPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
-                                     relief=buttonRelief,
-                                     command=previewPushed)
+                                        relief=buttonRelief,
+                                        command=previewPushed)
         gradientPreviewButton.grid(column=0, row=10, padx=padx, pady=pady)
-        gradientButton = t.Button(gradientWindow, text="Colorize", fg=fg, bg=bg)
+        gradientButton = t.Button(gradientWindow, text="Gradient", fg=fg, bg=bg)
         gradientButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                              command=gradientPushed)
+                                 command=gradientPushed)
         gradientButton.grid(column=0, row=11, padx=padx, pady=pady)
         gradientWindow.mainloop()
 
-    gradientWindowButton = t.Button(gradientWindow, text="Colorize Menu", fg=fg, bg=bg)
+    gradientWindowButton = t.Button(enhanceWindow, text="Gradient Menu", fg=fg, bg=bg)
     gradientWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
-                                     command=gradientWindowPushed)
+                                   command=gradientWindowPushed)
     gradientWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
     return row + 1
 
