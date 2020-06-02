@@ -1,5 +1,5 @@
 """
-Image Enchancment GUI, allows user to select images froma folder and prfoem enhcment and anylisis on them
+Image Enhancement GUI, allows user to select images from a folder and perform enhancement analysis on them
 """
 import os
 import tkinter as t
@@ -19,7 +19,7 @@ And set up for window
 enhanceWindow = t.Tk()
 
 # set up our window, size, title, icon
-enhanceWindow.geometry("850x550")
+enhanceWindow.geometry("850x600")
 enhanceWindow.title("Image Enhancement")
 enhanceWindow.iconbitmap("imagesForGUI\\guiIcon.ico")  # make our own image
 
@@ -65,12 +65,12 @@ def makeHelpMenu():
         helpWindow.iconbitmap("imagesForGUI\\helpMenu.ico")
         scrollInstruct = scrolledtext.ScrolledText(helpWindow, width=50, height=50)
         scrollInstruct.pack()
-        # TODO add instructions
         scrollInstruct.insert(t.INSERT, "Enter a full path directory to a folder of tif/tiff images. Clicking the "
                                         "load button will load and tif/tiff images in that folder not within another "
-                                        "folder.\nSelecting 'All' in the first drop down box will cause all images in" 
+                                        "folder.\nSelecting 'All' in the first drop down box will cause all images in"
                                         " the folder to be used for enhancement or analysis. Repeat selected images "
-                                        "will be ignored\nClicking an image enhancement button will open up another "
+                                        "will be ignored\nThe 'Open' button will open all the images selected at 1/3 "
+                                        "the size. Clicking an image enhancement button will open up another "
                                         "window asking for any need parameters and will allow the user to preview the "
                                         "first image in the column of image drop downs. All will ask for an out folder"
                                         "to put the resultant image in.\nIf the folder does not exist it will be "
@@ -114,7 +114,12 @@ def getFiles():
     if len(files) == 0:
         messagebox.showinfo("ERROR", "Directory did not contain tiff or tif files")
         return
+    end = 0
     # place the drop downs
+    if len(files) < 12:
+        end = len(files)
+    else:
+        end = 12
     for i in range(0, 12):
         if i == len(files):
             break
@@ -123,6 +128,24 @@ def getFiles():
         filesChosen[i]['values'] = filesOptions
         filesChosen[i].grid(column=0, row=i + 3, padx=padx, pady=pady)
         filesChosen[i].current(1)
+    def openPushed():
+        """
+        opens files selected
+        :return:
+        """
+        listOfNames = getFilesInDrop()
+        if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+            messagebox.showinfo("ERROR", listOfNames[0])
+            return
+        for img in listOfNames:
+            image1= cv2.imread(dir.get()+ "\\" + img)
+            cv2.namedWindow(img, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(img,int(image1.shape[1]/3), int(image1.shape[0]/3))
+            cv2.imshow(img, image1)
+    openImagesButton = t.Button(enhanceWindow, text="Open Images", fg=fg, bg=bg)
+    openImagesButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                               command=openPushed)
+    openImagesButton.grid(column=0, row=end+3)
 
 
 def folderCheckCreation(folderPath):
@@ -162,6 +185,7 @@ def makeFileColumn(column):
     loadFilesButton = t.Button(enhanceWindow, text="Load Images", fg=fg, bg=bg)
     loadFilesButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                               command=getFiles)
+
     loadFilesButton.grid(column=column, row=2, padx=padx, pady=pady)
     return column + 1
 
@@ -942,6 +966,8 @@ def makeColorizeButton(column, row):
     :param row: row to place button
     :return: int row updated, increased by 1
     """
+    # List of supported colors
+
 
     def colorWindowPushed():
         """
@@ -1035,8 +1061,8 @@ def makeColorizeButton(column, row):
                 return
             for i in listOfNames:
                 image1 = Image.open(dir.get() + "\\" + i)
-                image2 = ImageOps.colorize(image1, black=blackColor.get(), white=whiteColor.get(), mid=mid,
-                                           blackpoint=blk, whitepoint=wht)
+                image2 = ImageOps.colorize(image1, black=blackColor.get(), white=whiteColor.get(), mid=midColor.get(),
+                                           midpoint = mid, blackpoint=blk, whitepoint=wht)
                 image2.save(folder.get() + "\\-colorized-" + i)
             getFiles()
             colorWindow.destroy()
@@ -1470,13 +1496,13 @@ def makeEdgeDetectButton(column, row):
                               "accurate equation,\notherwise it uses this function:"
                               "\nEdge_Gradient(G)=|Gx|+|Gy|.\nEnter a folder path to place "
                               "the\nresults in.")
-        t1Label = t.Label(edgeWindow, text="Enter minVal", fg=fg, bg=titleBg)
+        t1Label = t.Label(edgeWindow, text="Enter first threshold", fg=fg, bg=titleBg)
         t1Label.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         t1Label.grid(column=0, row=1, padx=padx, pady=pady)
         threshold1 = t.Entry(edgeWindow)
         threshold1.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
         threshold1.grid(column=0, row=2)
-        t2Label = t.Label(edgeWindow, text="Enter axVal", fg=fg, bg=titleBg)
+        t2Label = t.Label(edgeWindow, text="Enter second threshold", fg=fg, bg=titleBg)
         t2Label.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         t2Label.grid(column=0, row=3, padx=padx, pady=pady)
         threshold2 = t.Entry(edgeWindow)
@@ -1501,7 +1527,7 @@ def makeEdgeDetectButton(column, row):
 
         def edgePushed():
             """
-            Get folder, check that theirs file to PCA
+            prform edge dection after checking for requirments
             :return:
             """
             listOfNames = getFilesInDrop()
@@ -1509,10 +1535,10 @@ def makeEdgeDetectButton(column, row):
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
             if len(threshold1.get()) == 0:
-                messagebox.showinfo("ERROR", "Enter a first threshold value alue")
+                messagebox.showinfo("ERROR", "Enter a first threshold value")
                 return
             if len(threshold2.get()) == 0:
-                messagebox.showinfo("ERROR", "Enter a axVal value")
+                messagebox.showinfo("ERROR", "Enter a second threshold value")
                 return
             if len(aptVal.get()) != 0:
                 aperture = int(aptVal.get())
@@ -1685,19 +1711,19 @@ def makeGradientButton(column, row):
             for i in listOfNames:
                 image1 = cv2.imread(dir.get() + "\\" + i)
                 if stateOfSobelX.get():
-                    image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 1, 0, ksize=ksize)
+                    image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 1, 0, ksize=ksize)
                     cv2.imwrite(folder.get() + "\\Sobel-x\\sobel-x-" + i, image2)
                 if stateOfSobelY.get():
-                    image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 0, 1, ksize=ksize)
+                    image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 0, 1, ksize=ksize)
                     cv2.imwrite(folder.get() + "\\Sobel-y\\sobel-y-" + i, image2)
                 if stateOfScharrX.get():
-                    image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 1, 0, -1)
+                    image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 1, 0, -1)
                     cv2.imwrite(folder.get() + "\\Scharr-x\\scharr-x-" + i, image2)
                 if stateOfScharrY.get():
-                    image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 0, 1, -1)
+                    image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 0, 1, -1)
                     cv2.imwrite(folder.get() + "\\Scharr-y\\scharr-y-" + i, image2)
                 if stateOfLaplacian.get():
-                    image2 = cv2.Laplacian(image1, int(-1/cv2.CV_64F))
+                    image2 = cv2.Laplacian(image1, int(-1 / cv2.CV_64F))
                     cv2.imwrite(folder.get() + "\\Laplacian\\laplacian-" + i, image2)
             getFiles()
             gradientWindow.destroy()
@@ -1722,19 +1748,19 @@ def makeGradientButton(column, row):
 
             image1 = cv2.imread(dir.get() + "\\" + listOfNames[0])
             if stateOfSobelX.get():
-                image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 1, 0, ksize)
+                image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 1, 0, ksize)
                 cv2.imshow("Sobel in x direction", image2)
             if stateOfSobelY.get():
-                image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 0, 1, ksize)
+                image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 0, 1, ksize)
                 cv2.imshow("Sobel in y direction", image2)
             if stateOfScharrX.get():
-                image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 1, 0, -1)
+                image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 1, 0, -1)
                 cv2.imshow("Scharr in x direction", image2)
             if stateOfScharrY.get():
-                image2 = cv2.Sobel(image1, int(-1/cv2.CV_64F), 0, 1, -1)
+                image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 0, 1, -1)
                 cv2.imshow("Scharr in y direction", image2)
             if stateOfLaplacian.get():
-                image2 = cv2.Laplacian(image1, int(-1/cv2.CV_64F))
+                image2 = cv2.Laplacian(image1, int(-1 / cv2.CV_64F))
                 cv2.imshow("Laplacian", image2)
 
         gradientPreviewButton = t.Button(gradientWindow, text="Preview", fg=fg, bg=bg)
