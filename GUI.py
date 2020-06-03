@@ -2,6 +2,7 @@
 Image Enhancement GUI, allows user to select images from a folder and perform enhancement analysis on them
 """
 import os
+import shutil
 import tkinter as t
 from tkinter import ttk, scrolledtext, messagebox
 import numpy as np
@@ -9,6 +10,7 @@ import cv2
 import imutils
 from PIL import Image, ImageEnhance
 from PIL import ImageOps
+from datetime import datetime
 
 """
 Varibales that need to be global
@@ -128,6 +130,7 @@ def getFiles():
         filesChosen[i]['values'] = filesOptions
         filesChosen[i].grid(column=0, row=i + 3, padx=padx, pady=pady)
         filesChosen[i].current(1)
+
     def openPushed():
         """
         opens files selected
@@ -138,14 +141,15 @@ def getFiles():
             messagebox.showinfo("ERROR", listOfNames[0])
             return
         for img in listOfNames:
-            image1= cv2.imread(dir.get()+ "\\" + img)
+            image1 = cv2.imread(dir.get() + "\\" + img)
             cv2.namedWindow(img, cv2.WINDOW_NORMAL)
-            cv2.resizeWindow(img,int(image1.shape[1]/3), int(image1.shape[0]/3))
+            cv2.resizeWindow(img, int(image1.shape[1] / 3), int(image1.shape[0] / 3))
             cv2.imshow(img, image1)
+
     openImagesButton = t.Button(enhanceWindow, text="Open Images", fg=fg, bg=bg)
     openImagesButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                command=openPushed)
-    openImagesButton.grid(column=0, row=end+3)
+    openImagesButton.grid(column=0, row=end + 3)
 
 
 def folderCheckCreation(folderPath):
@@ -190,6 +194,16 @@ def makeFileColumn(column):
     return column + 1
 
 
+def deleteTempFolder(dirName):
+    """
+
+    :return:
+    """
+    try:
+        shutil.rmtree(dirName)
+    except OSError as e:
+       messagebox.showinfo("Error", "Could not delete temoarary file")
+
 def getFilesInDrop():
     """
     gets a list of files selected, to avoid duplicates or emptyness
@@ -205,6 +219,7 @@ def getFilesInDrop():
                 return files
             if fName != "None":
                 names.append(fName)
+        print(fName)
     if len(names) == 0:
         return ["No files chosen"]
     return names
@@ -272,10 +287,57 @@ def makeCropButton(column, row):
             getFiles()
             cropWindow.destroy()
 
+        def previewPushed():
+            """
+                Allow user to see the first image in the dir with a the brightness factor applied
+                :return:
+                """
+            listOfNames = getFilesInDrop()
+            var = t.IntVar()
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+            cv2.namedWindow(listOfNames[0])
+            l = int(image1.size[1] / 2)
+            w = int(image1.size[0] / 2)
+            cv2.resizeWindow(listOfNames[0], w, l)
+            status = folderCheckCreation(dir.get() + "\\temporyPreview")
+            image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+            previewWindow = t.Toplevel(cropWindow)
+            previewWindow.title("Contrast Controls")
+
+            def moved(var):
+                if int(var) == 2:
+                    image = cv2.imread(dir.get() + "\\" + listOfNames[0])
+                    image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+                    cv2.imshow(listOfNames[0], image)
+                    cv2.resizeWindow(listOfNames[0], w, l)
+                    return
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+                image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+                cv2.imshow(listOfNames[0], image)
+                cv2.resizeWindow(listOfNames[0], w, l)
+                value = cv2.getTrackbarPos("Crop", listOfNames[0])
+                image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+                image2 = ImageOps.crop(image1, image1.size[1] // int(var))
+                status = folderCheckCreation(dir.get() + "\\temporyPreview")
+                image2.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+
+            cropBar = t.Scale(previewWindow, variable=var, from_=2, to_=8, resolution=1,
+                                  label="Crop", command=moved, length=200)
+            cropBar.pack()
+            #deleteTempFolder(dir.get() + "\\" + "temporyPreview")
+
+        previewButton = t.Button(cropWindow, text="Preview", fg=fg, bg=bg)
+        previewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                                command=previewPushed)
+        previewButton.grid(column=0, row=5, padx=padx, pady=pady)
         cropButton = t.Button(cropWindow, text="Crop", fg=fg, bg=bg)
         cropButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                              command=cropPushed)
-        cropButton.grid(column=0, row=5, padx=padx, pady=pady)
+        cropButton.grid(column=0, row=6, padx=padx, pady=pady)
         cropWindow.mainloop()
 
     cropWindowButton = t.Button(enhanceWindow, text="Crop Menu", fg=fg, bg=bg)
@@ -634,22 +696,43 @@ def makeBrightnessButton(column, row):
 
         def previewPushed():
             """
-            Allow user to see the first image in the dir with a the brightness factor applied
-            :return:
-            """
+                Allow user to see the first image in the dir with a the brightness factor applied
+                :return:
+                """
             listOfNames = getFilesInDrop()
+            var = t.DoubleVar()
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
-            if len(factor.get()) == 0 or float(factor.get()) < 0:
-                messagebox.showinfo("ERROR", "Enter a valid factor")
-                return
-            image1 = Image.open(dir.get() + "\\" + listOfNames[0])  # image 1 is our original image
-            temp = ImageEnhance.Brightness(image1)  # temp is a var we can perform a brightness enhancement on
-            image2 = temp.enhance(
-                float(factor.get()))  # Preform enhancement with a factor of 1.6 and set that new enhance image
-            # equal to image two
-            image2.show()  # display image 2
+            image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+            cv2.namedWindow(listOfNames[0])
+            l = int(image1.size[1] / 2)
+            w = int(image1.size[0] / 2)
+            cv2.resizeWindow(listOfNames[0], w, l)
+            status = folderCheckCreation(dir.get() + "\\temporyPreview")
+            image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+            previewWindow = t.Toplevel(brightnessWindow)
+            previewWindow.title("Brightnesss Controls")
+
+            def moved(var):
+                """
+
+                    :return:
+                    """
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+                image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+                cv2.imshow(listOfNames[0], image)
+                cv2.resizeWindow(listOfNames[0], w, l)
+                image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+                temp = ImageEnhance.Brightness(image1)
+                image2 = temp.enhance(float(var))
+                status = folderCheckCreation(dir.get() + "\\temporyPreview")
+                image2.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+
+            brightBar = t.Scale(previewWindow, variable=var, from_=0, to_=8, resolution=.1,
+                                label="Brightness", command=moved, length= 200)
+            brightBar.pack()
 
         brightnessPreviewButton = t.Button(brightnessWindow, text="Preview", fg=fg, bg=bg)
         brightnessPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
@@ -736,29 +819,50 @@ def makeContrastButton(column, row):
 
         def previewPushed():
             """
-            Allow user to see the first image in the dir with a the contrast factor applied
-            :return:
-            """
+                Allow user to see the first image in the dir with a the brightness factor applied
+                :return:
+                """
             listOfNames = getFilesInDrop()
+            var = t.DoubleVar()
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
-            if len(factor.get()) == 0 or float(factor.get()) < 0:
-                messagebox.showinfo("ERROR", "Enter a valid factor")
-                return
-            image1 = Image.open(dir.get() + "\\" + listOfNames[0])  # image 1 is our original image
-            temp = ImageEnhance.Contrast(image1)  # temp is a var we can perform a brightness enhancement on
-            image2 = temp.enhance(
-                float(factor.get()))  # Preform enhancement with a factor of 1.6 and set that new enhance image
-            # equal to image two
-            image2.show()  # display image 2
+            image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+            cv2.namedWindow(listOfNames[0])
+            l = int(image1.size[1] / 2)
+            w = int(image1.size[0] / 2)
+            cv2.resizeWindow(listOfNames[0], w, l)
+            status = folderCheckCreation(dir.get() + "\\temporyPreview")
+            image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+            previewWindow = t.Toplevel(contrastWindow)
+            previewWindow.title("Contrast Controls")
+
+            def moved(var):
+                """
+
+                    :return:
+                    """
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+                image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+                cv2.imshow(listOfNames[0], image)
+                cv2.resizeWindow(listOfNames[0], w, l)
+                image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+                temp = ImageEnhance.Contrast(image1)
+                image2 = temp.enhance(float(var))
+                status = folderCheckCreation(dir.get() + "\\temporyPreview")
+                image2.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+
+            contrastBar = t.Scale(previewWindow, variable=var, from_=0, to_=8, resolution=.1,
+                                label="Contrast", command=moved, length= 200)
+            contrastBar.pack()
 
         contrastPreviewButton = t.Button(contrastWindow, text="Preview", fg=fg, bg=bg)
         contrastPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
                                         relief=buttonRelief,
                                         command=previewPushed)
         contrastPreviewButton.grid(column=0, row=5, padx=padx, pady=pady)
-        contrastButton = t.Button(contrastWindow, text="Brightness", fg=fg, bg=bg)
+        contrastButton = t.Button(contrastWindow, text="Contrast", fg=fg, bg=bg)
         contrastButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                  command=contrastPushed)
         contrastButton.grid(column=0, row=6, padx=padx, pady=pady)
@@ -839,22 +943,43 @@ def makeSharpnessButton(column, row):
 
         def previewPushed():
             """
-            Allow user to see the first image in the dir with a the brightness factor applied
-            :return:
-            """
+                Allow user to see the first image in the dir with a the brightness factor applied
+                :return:
+                """
             listOfNames = getFilesInDrop()
+            var = t.DoubleVar()
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
-            if len(factor.get()) == 0 or float(factor.get()) < 0:
-                messagebox.showinfo("ERROR", "Enter a valid factor")
-                return
-            image1 = Image.open(dir.get() + "\\" + listOfNames[0])  # image 1 is our original image
-            temp = ImageEnhance.Sharpness(image1)  # temp is a var we can perform a brightness enhancement on
-            image2 = temp.enhance(
-                float(factor.get()))  # Preform enhancement with a factor of 1.6 and set that new enhance image
-            # equal to image two
-            image2.show()  # display image 2
+            image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+            cv2.namedWindow(listOfNames[0])
+            l = int(image1.size[1] / 2)
+            w = int(image1.size[0] / 2)
+            cv2.resizeWindow(listOfNames[0], w, l)
+            status = folderCheckCreation(dir.get() + "\\temporyPreview")
+            image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+            previewWindow = t.Toplevel(sharpWindow)
+            previewWindow.title("Contrast Controls")
+
+            def moved(var):
+                """
+
+                    :return:
+                    """
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+                image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+                cv2.imshow(listOfNames[0], image)
+                cv2.resizeWindow(listOfNames[0], w, l)
+                image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+                temp = ImageEnhance.Sharpness(image1)
+                image2 = temp.enhance(float(var))
+                status = folderCheckCreation(dir.get() + "\\temporyPreview")
+                image2.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+
+            sharpnessBar = t.Scale(previewWindow, variable=var, from_=0, to_=8, resolution=.1,
+                                  label="Sharpness", command=moved, length=200)
+            sharpnessBar.pack()
 
         sharpPreviewButton = t.Button(sharpWindow, text="Preview", fg=fg, bg=bg)
         sharpPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
@@ -959,6 +1084,20 @@ def makeEqualizeButton(column, row):
     return row + 1
 
 
+def makeColorList(file):
+    """
+    makes a list of html colors from a file
+    :return: list of colors
+    """
+    f = open(file)
+    colors = []
+    colors.append("None")
+    for line in f:
+        colors.append(line)
+    f.close()
+    return colors
+
+
 def makeColorizeButton(column, row):
     """
     Makes button to open colorize menu, when its pressed the colorized menu is opened
@@ -967,7 +1106,7 @@ def makeColorizeButton(column, row):
     :return: int row updated, increased by 1
     """
     # List of supported colors
-
+    colors = makeColorList("imagesForGUI\\htmlColors")
 
     def colorWindowPushed():
         """
@@ -991,9 +1130,11 @@ def makeColorizeButton(column, row):
         blackColorLabel = t.Label(colorWindow, text="Enter black input color", fg=fg, bg=titleBg)
         blackColorLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         blackColorLabel.grid(column=0, row=1, padx=padx, pady=pady)
-        blackColor = t.Entry(colorWindow)
-        blackColor.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        blackColor.grid(column=0, row=2)
+        blackColor = ttk.Combobox(colorWindow)
+        blackColor.configure(font=(font, fontSize), width=width, )
+        blackColor['values'] = colors
+        blackColor.grid(column=0, row=2, padx=padx, pady=pady)
+        blackColor.current(0)
         blackValueLabel = t.Label(colorWindow, text="Enter black int value", fg=fg, bg=titleBg)
         blackValueLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         blackValueLabel.grid(column=0, row=3, padx=padx, pady=pady)
@@ -1003,9 +1144,11 @@ def makeColorizeButton(column, row):
         midColorLabel = t.Label(colorWindow, text="Enter midpoint input color", fg=fg, bg=titleBg)
         midColorLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         midColorLabel.grid(column=0, row=5, padx=padx, pady=pady)
-        midColor = t.Entry(colorWindow)
-        midColor.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        midColor.grid(column=0, row=6)
+        midColor = ttk.Combobox(colorWindow)
+        midColor.configure(font=(font, fontSize), width=width, )
+        midColor['values'] = colors
+        midColor.grid(column=0, row=6, padx=padx, pady=pady)
+        midColor.current(0)
         midValueLabel = t.Label(colorWindow, text="Enter midpoint int value", fg=fg, bg=titleBg)
         midValueLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         midValueLabel.grid(column=0, row=7, padx=padx, pady=pady)
@@ -1015,9 +1158,11 @@ def makeColorizeButton(column, row):
         whiteColorLabel = t.Label(colorWindow, text="Enter white input color", fg=fg, bg=titleBg)
         whiteColorLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         whiteColorLabel.grid(column=0, row=9, padx=padx, pady=pady)
-        whiteColor = t.Entry(colorWindow)
-        whiteColor.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        whiteColor.grid(column=0, row=10)
+        whiteColor = ttk.Combobox(colorWindow)
+        whiteColor.configure(font=(font, fontSize), width=width, )
+        whiteColor['values'] = colors
+        whiteColor.grid(column=0, row=10, padx=padx, pady=pady)
+        whiteColor.current(0)
         whiteValueLabel = t.Label(colorWindow, text="Enter white int value", fg=fg, bg=titleBg)
         whiteValueLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         whiteValueLabel.grid(column=0, row=11, padx=padx, pady=pady)
@@ -1037,21 +1182,36 @@ def makeColorizeButton(column, row):
             :return:
             """
             listOfNames = getFilesInDrop()
+            # 1-all colors and ints, 2-black and whit with nums, 3-black and white
+            executeType = 1
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
-            if len(blackColor.get()) == 0 or len(whiteColor.get()) == 0 or len(midColor.get()) == 0:
+            if blackColor.get() == "None" or whiteColor.get() == "None":
                 messagebox.showinfo("ERROR", "Enter a valid colors")
                 return
-            if len(blackValue.get()) == 0 or len(midValue.get()) == 0 or len(whiteValue.get()) == 0:
-                messagebox.showinfo("ERROR", "Enter a valid int values (0-255)")
-                return
-            blk = int(blackValue.get())
-            wht = int(whiteValue.get())
-            mid = int(midValue.get())
-            if blk > 255 or blk < 0 or wht > 255 or wht < 0 or mid > 255 or mid < 0:
-                messagebox.showinfo("ERROR", "Enter a valid int values (0-255)")
-                return
+            if len(blackValue.get()) == 0 or len(whiteValue.get()) == 0:
+                executeType = 3
+            else:
+                blk = int(blackValue.get())
+                wht = int(whiteValue.get())
+                if blk > 255 or blk < 0 or wht > 255 or wht < 0:
+                    messagebox.showinfo("ERROR", "Enter valid int values (0-255)")
+                    return
+                executeType = 2
+            if midColor.get() != "None" and len(midValue.get()) > 0:
+                mid = int(midValue.get())
+                if mid <= 255 or mid >= 0:
+                    executeType = 1
+                else:
+                    messagebox.showinfo("ERROR", "Enter valid int values (0-255)")
+                    return
+            else:
+                if midColor.get() != "None" and (
+                        len(midValue.get()) == 0 or len(whiteValue.get()) == 0 or len(blackValue.get()) == 0):
+                    messagebox.showinfo("ERROR",
+                                        "When a middle color is chosen all colors must have a valid int value  (0-255)")
+
             if len(folder.get()) == 0:
                 messagebox.showinfo("ERROR", "Enter a folder")
                 return
@@ -1060,10 +1220,34 @@ def makeColorizeButton(column, row):
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = Image.open(dir.get() + "\\" + i)
-                image2 = ImageOps.colorize(image1, black=blackColor.get(), white=whiteColor.get(), mid=midColor.get(),
-                                           midpoint = mid, blackpoint=blk, whitepoint=wht)
-                image2.save(folder.get() + "\\-colorized-" + i)
+                if len(i) > 0:
+                    image1 = Image.open(dir.get() + "\\" + i)
+                    if executeType == 1:
+                        image2 = ImageOps.colorize(image1, black=(blackColor.get()).rstrip(),
+                                                   white=(whiteColor.get()).rstrip(), mid=(midColor.get()).rstrip(),
+                                                   midpoint=mid, blackpoint=blk, whitepoint=wht)
+                    if executeType == 2:
+                        image2 = ImageOps.colorize(image1, black=(blackColor.get()).rstrip(),
+                                                   white=(whiteColor.get()).rstrip(), blackpoint=blk, whitepoint=wht)
+                    if executeType == 3:
+                        image2 = ImageOps.colorize(image1, black=(blackColor.get()).rstrip(),
+                                                   white=(whiteColor.get()).rstrip())
+                    image2.save(folder.get() + "\\-colorized-" + i)
+            f = open(folder.get() + "\\" + "ColorizeNamesAndValues" + ".txt", "w")
+            if executeType == 1:
+                f.write("Black Color = " + (blackColor.get()).rstrip() + "\nBlack Value = " + str(
+                    blk) + "\nMiddle Color = " +
+                        (midColor.get()).rstrip() + "\nMiddle Value = " + str(mid) + " \nWhite Color = " + (
+                            whiteColor.get()).rstrip() +
+                        "\nWhite Value = " + str(wht))
+            if executeType == 2:
+                f.write("Black Color = " + (blackColor.get()).rstrip() + "\nBlack Value = " + str(
+                    blk) + " \nWhite Color = " +
+                        (whiteColor.get()).rstrip() + "\nWhite Value = " + str(wht))
+            if executeType == 3:
+                f.write(
+                    "Black Color = " + (blackColor.get()).rstrip() + " \nWhite Color = " + (whiteColor.get()).rstrip())
+            f.close()
             getFiles()
             colorWindow.destroy()
 
@@ -1073,28 +1257,48 @@ def makeColorizeButton(column, row):
             :return:
             """
             listOfNames = getFilesInDrop()
+            # 1-all colors and ints, 2-black and whit with nums, 3-black and white
+            executeType = 1
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
-            if len(blackColor.get()) == 0 or len(whiteColor.get()) == 0 or len(midColor.get()) == 0:
+            if blackColor.get() == "None" or whiteColor.get() == "None":
                 messagebox.showinfo("ERROR", "Enter a valid colors")
                 return
-            if len(blackValue.get()) == 0 or len(midValue.get()) == 0 or len(whiteValue.get()) == 0:
-                messagebox.showinfo("ERROR", "Enter a valid int values (0-255)")
-                return
-            blk = int(blackValue.get())
-            wht = int(whiteValue.get())
-            mid = int(midValue.get())
-            if blk > 255 or blk < 0 or wht > 255 or wht < 0 or mid > 255 or mid < 0:
-                messagebox.showinfo("ERROR", "Enter a valid int values (0-255)")
-                return
+            if len(blackValue.get()) == 0 or len(whiteValue.get()) == 0:
+                executeType = 3
+            else:
+                blk = int(blackValue.get())
+                wht = int(whiteValue.get())
+                if blk > 255 or blk < 0 or wht > 255 or wht < 0:
+                    messagebox.showinfo("ERROR", "Enter valid int values (0-255)")
+                    return
+                executeType = 2
+            if midColor.get() != "None" and len(midValue.get()) > 0:
+                mid = int(midValue.get())
+                if mid <= 255 or mid >= 0:
+                    executeType = 1
+                else:
+                    messagebox.showinfo("ERROR", "Enter valid int values (0-255)")
+                    return
+            else:
+                if midColor.get() != "None" and (
+                        len(midValue.get()) == 0 or len(whiteValue.get()) == 0 or len(blackValue.get()) == 0):
+                    messagebox.showinfo("ERROR",
+                                        "When a middle color is chosen all colors must have a valid int value  (0-255)")
 
             image1 = Image.open(dir.get() + "\\" + listOfNames[0])
-            image2 = ImageOps.colorize(image1, black=blackColor.get(), white=whiteColor.get(), mid=midColor.get(),
-                                       blackpoint=int(blackValue.get()), whitepoint=int(whiteValue.get()),
-                                       midpoint=int(midValue.get()))
-            # equal to image two
-            image2.show()  # display image 2
+            if executeType == 1:
+                image2 = ImageOps.colorize(image1, black=(blackColor.get()).rstrip(),
+                                           white=(whiteColor.get()).rstrip(), mid=(midColor.get()).rstrip(),
+                                           midpoint=mid, blackpoint=blk, whitepoint=wht)
+            if executeType == 2:
+                image2 = ImageOps.colorize(image1, black=(blackColor.get()).rstrip(),
+                                           white=(whiteColor.get()).rstrip(), blackpoint=blk, whitepoint=wht)
+            if executeType == 3:
+                image2 = ImageOps.colorize(image1, black=(blackColor.get()).rstrip(),
+                                           white=(whiteColor.get()).rstrip())
+            image2.show()
 
         colorPreviewButton = t.Button(colorWindow, text="Preview", fg=fg, bg=bg)
         colorPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
@@ -1178,20 +1382,42 @@ def makeSolarizeButton(column, row):
 
         def previewPushed():
             """
-            Allow user to see the first image in the dir with a the brightness factor applied
-            :return:
-            """
+                Allow user to see the first image in the dir with a the brightness factor applied
+                :return:
+                """
             listOfNames = getFilesInDrop()
-            if len(threshold.get()) == 0 or int(threshold.get()) < 0 or int(threshold.get()) > 256:
-                messagebox.showinfo("ERROR", "Enter a valid factor")
-                return
+            var = t.IntVar()
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
             image1 = Image.open(dir.get() + "\\" + listOfNames[0])
-            image2 = ImageOps.solarize(image1, int(threshold.get()))
-            # equal to image two
-            image2.show()  # display image 2
+            cv2.namedWindow(listOfNames[0])
+            l = int(image1.size[1] / 2)
+            w = int(image1.size[0] / 2)
+            cv2.resizeWindow(listOfNames[0], w, l)
+            status = folderCheckCreation(dir.get() + "\\temporyPreview")
+            image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+            previewWindow = t.Toplevel(solarWindow)
+            previewWindow.title("Solarize Controls")
+
+            def moved(var):
+                """
+
+                    :return:
+                    """
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+                image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+                cv2.imshow(listOfNames[0], image)
+                cv2.resizeWindow(listOfNames[0], w, l)
+                image1 = Image.open(dir.get() + "\\" + listOfNames[0])
+                image2 = ImageOps.solarize(image1, int(var))
+                status = folderCheckCreation(dir.get() + "\\temporyPreview")
+                image2.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
+                image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+
+            solarBar = t.Scale(previewWindow, variable=var, from_=0, to_=255, resolution=1,
+                                  label="Solarize", command=moved, length=300)
+            solarBar.pack()
 
         solarPreviewButton = t.Button(solarWindow, text="Preview", fg=fg, bg=bg)
         solarPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
@@ -1692,11 +1918,10 @@ def makeGradientButton(column, row):
             if not stateOfLaplacian.get() and not stateOfSobelX.get() and not stateOfSobelY.get() and not stateOfScharrX.get() and not stateOfScharrY.get():
                 messagebox.showinfo("ERROR", "Choose at least one gradient method")
                 return
-            if (stateOfSobelX.get() or stateOfSobelY.get()) and len(kernel.get()) == 0:
-                messagebox.showinfo("ERROR", "Enter a kernel size for Sobel methods")
-                return
             if len(kernel.get()) > 0:
                 ksize = int(kernel.get())
+            else:
+                ksize =3
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
