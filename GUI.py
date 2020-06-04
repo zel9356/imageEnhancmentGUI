@@ -10,6 +10,7 @@ import cv2
 import imutils
 from PIL import Image, ImageEnhance
 from PIL import ImageOps
+import matplotlib.pyplot as plt
 from datetime import datetime
 
 """
@@ -116,15 +117,8 @@ def getFiles():
     if len(files) == 0:
         messagebox.showinfo("ERROR", "Directory did not contain tiff or tif files")
         return
-    end = 0
     # place the drop downs
-    if len(files) < 12:
-        end = len(files)
-    else:
-        end = 12
     for i in range(0, 12):
-        if i == len(files):
-            break
         filesChosen.append(ttk.Combobox(enhanceWindow))
         filesChosen[i].configure(font=(font, fontSize), width=width, )
         filesChosen[i]['values'] = filesOptions
@@ -149,7 +143,7 @@ def getFiles():
     openImagesButton = t.Button(enhanceWindow, text="Open Images", fg=fg, bg=bg)
     openImagesButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                command=openPushed)
-    openImagesButton.grid(column=0, row=end + 3)
+    openImagesButton.grid(column=0, row=15)
 
 
 def folderCheckCreation(folderPath):
@@ -550,7 +544,8 @@ def makeImageRegButton(column, row):
                 height, width, channels = img1.shape
                 im2Reg = cv2.warpPerspective(img2, h, (width, height))
                 name = (folder.get() + "\\" + "reg-" + listOfNames[x])
-                cv2.imwrite(name, im2Reg)
+                gray = cv2.cvtColor(im2Reg, cv2.COLOR_BGR2GRAY)
+                cv2.imwrite(name, gray)
             getFiles()
             regWindow.destroy()
 
@@ -588,14 +583,23 @@ def makePCAButton(column, row):
         scrollInstruct = scrolledtext.ScrolledText(PCAWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
-                              "Enter a folder path. Images chosen\nwill be used for PCA. \nEnter a folder path to place "
+                              "Enter the amount of components.\nEnter a folder path. Images chosen\nwill be used for PCA. \nEnter a folder path to "
+                              "place "
                               "the\nresults in.")
+        componentsLabel = t.Label(PCAWindow, text="Enter number of components", fg=fg, bg=titleBg)
+        componentsLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        componentsLabel.grid(column=0, row=1, padx=padx, pady=pady)
+        component = ttk.Combobox(PCAWindow)
+        component.configure(font=(font, fontSize), width=width, )
+        component['values'] =(3,4,5,6)
+        component.grid(column=0, row=2, padx=padx, pady=pady)
+        component.current(0)
         folderLabel = t.Label(PCAWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
-        folderLabel.grid(column=0, row=1, padx=padx, pady=pady)
+        folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
         folder = t.Entry(PCAWindow)
         folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        folder.grid(column=0, row=2)
+        folder.grid(column=0, row=4)
 
         def PCAPushed():
             """
@@ -613,7 +617,67 @@ def makePCAButton(column, row):
             if not status:
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
-            # TODO PCA function
+            comp = int(component.get())
+            # T
+            imgSrcDir = dir.get()
+            a_font_files = [os.path.join(imgSrcDir, f) for f in os.listdir(imgSrcDir) if f in listOfNames]
+
+            # Define PCA function
+            def pca(X):
+                """
+                Principal Component Analysis
+                input: X, matrix with trainnig data stored as flattened arrays in rows
+                return: projection matrix (with important dimensions first), variance and mean.
+
+                SVD factorization:  A = U * Sigma * V.T
+                                    A.T * A = V * Sigma^2 * V.T  (V is eigenvectors of A.T*A)
+                                    A * A.T = U * Sigma^2 * U.T  (U is eigenvectors of A * A.T)
+                                    A.T * U = V * Sigma
+
+                """
+                """
+                # get matrix dimensions
+                num_data, dim = X.shape
+
+                # center data
+                mean_X = X.mean(axis=0)
+                X = X - mean_X
+
+                if dim > num_data:
+                    # PCA compact trick
+                    M = np.dot(X, X.T)  # covariance matrix
+                    e, U = np.linalg.eigh(M)  # calculate eigenvalues an deigenvectors
+                    tmp = np.dot(X.T, U).T
+                    V = tmp[::-1]  # reverse since the last eigenvectors are the ones we want
+                    S = np.sqrt(e)[::-1]  # reverse since the last eigenvalues are in increasing order
+                    for i in range(V.shape[1]):
+                        V[:, i] /= S
+                else:
+                    # normal PCA, SVD method
+                    U, S, V = np.linalg.svd(X)
+                    V = V[:num_data]  # only makes sense to return the first num_data
+                return V, S, mean_X
+
+            # load images into matrix
+            immatrix = np.array([np.array(Image.open(im, 'r')).flatten()
+                                 for im in a_font_files], 'f')
+
+            # Perform PCA
+            V, S, immean = pca(immatrix)
+
+            # Show Results
+            # First one is the mean image
+            # Rest 7 are the top 7 features extracted for font 'a'
+            tmp_img = np.array(Image.open(a_font_files[0], 'r'))
+            m, n = tmp_img.shape
+
+            temp = immean.reshape(m, n)
+            plt.imsave(fname=folder.get() + "\\meanImage" + ".tiff", arr=temp, cmap="gray")
+
+            for i in range(comp):
+                temp = V[i].reshape(m, n)
+                plt.imsave(fname=folder.get() +"\\PC" + str(i+1) + ".tiff", arr=temp, cmap="gray")
+                """
             getFiles()
             PCAWindow.destroy()
 
@@ -1520,7 +1584,7 @@ def makeThresholdButton(column, row):
         :return:
         """
         threshWindow = t.Toplevel(enhanceWindow)
-        threshWindow.geometry("300x400")
+        threshWindow.geometry("300x450")
         threshWindow.title("Threshold")
         threshWindow.iconbitmap("imagesForGUI\\threshold.ico")
 
@@ -1596,7 +1660,7 @@ def makeThresholdButton(column, row):
             """
             listOfNames = getFilesInDrop()
             if len(threshold.get()) == 0 or len(max.get()) == 0:
-                messagebox.showinfo("ERROR", "Enter a valid color")
+                messagebox.showinfo("ERROR", "Enter valid vlaues (0=255)")
                 return
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
@@ -1640,27 +1704,31 @@ def makeThresholdButton(column, row):
             """
             listOfNames = getFilesInDrop()
             if len(threshold.get()) == 0 or len(max.get()) == 0:
-                messagebox.showinfo("ERROR", "Enter a valid color")
+                messagebox.showinfo("ERROR", "Enter valid numbers")
                 return
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
             img1 = Image.open(dir.get() + "\\" + listOfNames[0])
+            status = folderCheckCreation(dir.get() + "\\TempFolder")
+            if not status:
+                messagebox.showinfo("Error", "Error Creating Temporary folder")
             if stateOfBinary.get():
                 retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_BINARY)
-                cv2.imshow("Binary", threshImg)
+                cv2.imwrite(folder.get() + "\\" + "Binary\\thresh-binary-" + img1, threshImg)
             if stateOfInvBinary.get():
                 retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_BINARY_INV)
-                cv2.imshow("Inverse Binary", threshImg)
+                cv2.imwrite(folder.get() + "\\" + "InverseBinary\\thresh-Inversebinary-" + img1, threshImg)
             if stateOfToZero.get():
                 retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TOZERO)
-                cv2.imshow("To Thresholding", threshImg)
+                cv2.imwrite(folder.get() + "\\" + "ToZero\\thresh-ToZero-" + img1, threshImg)
             if stateOfInvZero.get():
                 retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TOZERO_INV)
-                cv2.imshow("Inverse to Zero", threshImg)
+                cv2.imwrite(folder.get() + "\\" + "InverseToZero\\thresh-InverseToZero-" + img1, threshImg)
             if stateOfTrunc.get():
                 retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TRUNC)
-                cv2.imshow("Trunc", threshImg)
+                cv2.imwrite(folder.get() + "\\" + "Trunc\\thresh-Trunc-" + img1, threshImg)
+            cv2.waitKey(0)
 
         thresholdPreviewButton = t.Button(threshWindow, text="Preview", fg=fg, bg=bg)
         thresholdPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
