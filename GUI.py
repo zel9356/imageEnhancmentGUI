@@ -109,7 +109,7 @@ def getFiles():
 
     for f in os.listdir(dir.get()):  # for each image in the folder images f is equal to the file name
         # we only want to act on our tiff images, dont want to try to do analysis on a txt file
-        if f.endswith(".tiff") or f.endswith(".tif"):
+        if f.endswith(".tif") or f.endswith(".tiff"):
             if f not in files:
                 files.append(f)
                 filesOptions.append(f)
@@ -196,7 +196,8 @@ def deleteTempFolder(dirName):
     try:
         shutil.rmtree(dirName)
     except OSError as e:
-       messagebox.showinfo("Error", "Could not delete temoarary file")
+        messagebox.showinfo("Error", "Could not delete temoarary file")
+
 
 def getFilesInDrop():
     """
@@ -213,7 +214,6 @@ def getFilesInDrop():
                 return files
             if fName != "None":
                 names.append(fName)
-        print(fName)
     if len(names) == 0:
         return ["No files chosen"]
     return names
@@ -275,9 +275,10 @@ def makeCropButton(column, row):
 
             for x in listOfNames:
                 if len(x) > 0:
-                    image1 = Image.open(dir.get() + "\\" + x)
-                    image2 = ImageOps.crop(image1, image1.size[1] // int(cropFactor.get()))
-                    image2.save(folder.get() + "\\" + "cropped-" + cropFactor.get() + "-" + x)
+                    if x != "":
+                        image1 = Image.open(dir.get() + "\\" + x)
+                        image2 = ImageOps.crop(image1, image1.size[1] // int(cropFactor.get()))
+                        image2.save(folder.get() + "\\" + "cropped-" + cropFactor.get() + "-" + x)
             getFiles()
             cropWindow.destroy()
 
@@ -320,9 +321,9 @@ def makeCropButton(column, row):
                 image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
 
             cropBar = t.Scale(previewWindow, variable=var, from_=2, to_=8, resolution=1,
-                                  label="Crop", command=moved, length=200)
+                              label="Crop", command=moved, length=200)
             cropBar.pack()
-            #deleteTempFolder(dir.get() + "\\" + "temporyPreview")
+            # deleteTempFolder(dir.get() + "\\" + "temporyPreview")
 
         previewButton = t.Button(cropWindow, text="Preview", fg=fg, bg=bg)
         previewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
@@ -591,7 +592,7 @@ def makePCAButton(column, row):
         componentsLabel.grid(column=0, row=1, padx=padx, pady=pady)
         component = ttk.Combobox(PCAWindow)
         component.configure(font=(font, fontSize), width=width, )
-        component['values'] =(3,4,5,6)
+        component['values'] = (3, 4, 5, 6)
         component.grid(column=0, row=2, padx=padx, pady=pady)
         component.current(0)
         folderLabel = t.Label(PCAWindow, text="Enter folder", fg=fg, bg=titleBg)
@@ -635,7 +636,7 @@ def makePCAButton(column, row):
                                     A.T * U = V * Sigma
 
                 """
-                """
+
                 # get matrix dimensions
                 num_data, dim = X.shape
 
@@ -673,11 +674,17 @@ def makePCAButton(column, row):
 
             temp = immean.reshape(m, n)
             plt.imsave(fname=folder.get() + "\\meanImage" + ".tiff", arr=temp, cmap="gray")
+            temp = cv2.imread(folder.get() + "\\meanImage" + ".tiff")
+            imageToSave = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
+            cv2.imwrite(folder.get() + "\\meanImage" + ".tiff", imageToSave)
 
             for i in range(comp):
                 temp = V[i].reshape(m, n)
-                plt.imsave(fname=folder.get() +"\\PC" + str(i+1) + ".tiff", arr=temp, cmap="gray")
-                """
+                plt.imsave(fname=folder.get() + "\\PC" + str(i + 1) + ".tiff", arr=temp, cmap="gray")
+                temp = cv2.imread(folder.get() + "\\PC" + str(i + 1) + ".tiff")
+                imageToSave = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
+                cv2.imwrite(folder.get() + "\\PC" + str(i + 1) + ".tiff", imageToSave)
+
             getFiles()
             PCAWindow.destroy()
 
@@ -751,10 +758,11 @@ def makeBrightnessButton(column, row):
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = Image.open(dir.get() + "\\" + i)
-                temp = ImageEnhance.Brightness(image1)
-                image2 = temp.enhance(float(factor.get()))
-                image2.save(folder.get() + "\\brightness-" + factor.get() + "-" + i)
+                if i != "":
+                    image1 = Image.open(dir.get() + "\\" + i)
+                    temp = ImageEnhance.Brightness(image1)
+                    image2 = temp.enhance(float(factor.get()))
+                    image2.save(folder.get() + "\\brightness-" + factor.get() + "-" + i)
             getFiles()
             brightnessWindow.destroy()
 
@@ -795,7 +803,7 @@ def makeBrightnessButton(column, row):
                 image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
 
             brightBar = t.Scale(previewWindow, variable=var, from_=0, to_=8, resolution=.1,
-                                label="Brightness", command=moved, length= 200)
+                                label="Brightness", command=moved, length=200)
             brightBar.pack()
 
         brightnessPreviewButton = t.Button(brightnessWindow, text="Preview", fg=fg, bg=bg)
@@ -874,10 +882,11 @@ def makeContrastButton(column, row):
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = Image.open(dir.get() + "\\" + i)
-                temp = ImageEnhance.Contrast(image1)
-                image2 = temp.enhance(float(factor.get()))
-                image2.save(folder.get() + "\\contrast-" + factor.get() + "-" + i)
+                if i != "":
+                    image1 = Image.open(dir.get() + "\\" + i)
+                    temp = ImageEnhance.Contrast(image1)
+                    image2 = temp.enhance(float(factor.get()))
+                    image2.save(folder.get() + "\\contrast-" + factor.get() + "-" + i)
             getFiles()
             contrastWindow.destroy()
 
@@ -918,7 +927,7 @@ def makeContrastButton(column, row):
                 image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
 
             contrastBar = t.Scale(previewWindow, variable=var, from_=0, to_=8, resolution=.1,
-                                label="Contrast", command=moved, length= 200)
+                                  label="Contrast", command=moved, length=200)
             contrastBar.pack()
 
         contrastPreviewButton = t.Button(contrastWindow, text="Preview", fg=fg, bg=bg)
@@ -997,11 +1006,11 @@ def makeSharpnessButton(column, row):
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = Image.open(dir.get() + "\\" + i)
-                temp = ImageEnhance.Sharpness(image1)
-                image2 = temp.enhance(float(factor.get()))
-                image2.save(folder.get() + "\\sharper-" + factor.get() + "-" + i)
-            # TODO PCA function
+                if i != "":
+                    image1 = Image.open(dir.get() + "\\" + i)
+                    temp = ImageEnhance.Sharpness(image1)
+                    image2 = temp.enhance(float(factor.get()))
+                    image2.save(folder.get() + "\\sharper-" + factor.get() + "-" + i)
             getFiles()
             sharpWindow.destroy()
 
@@ -1042,7 +1051,7 @@ def makeSharpnessButton(column, row):
                 image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
 
             sharpnessBar = t.Scale(previewWindow, variable=var, from_=0, to_=8, resolution=.1,
-                                  label="Sharpness", command=moved, length=200)
+                                   label="Sharpness", command=moved, length=200)
             sharpnessBar.pack()
 
         sharpPreviewButton = t.Button(sharpWindow, text="Preview", fg=fg, bg=bg)
@@ -1111,9 +1120,10 @@ def makeEqualizeButton(column, row):
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = Image.open(dir.get() + "\\" + i)
-                image2 = ImageOps.equalize(image1)
-                image2.save(folder.get() + "\\-equalized-" + i)
+                if i != "":
+                    image1 = Image.open(dir.get() + "\\" + i)
+                    image2 = ImageOps.equalize(image1)
+                    image2.save(folder.get() + "\\equalized-" + i)
             getFiles()
             equalWindow.destroy()
 
@@ -1296,7 +1306,7 @@ def makeColorizeButton(column, row):
                     if executeType == 3:
                         image2 = ImageOps.colorize(image1, black=(blackColor.get()).rstrip(),
                                                    white=(whiteColor.get()).rstrip())
-                    image2.save(folder.get() + "\\-colorized-" + i)
+                    image2.save(folder.get() + "\\colorized-" + i)
             f = open(folder.get() + "\\" + "ColorizeNamesAndValues" + ".txt", "w")
             if executeType == 1:
                 f.write("Black Color = " + (blackColor.get()).rstrip() + "\nBlack Value = " + str(
@@ -1402,15 +1412,38 @@ def makeSolarizeButton(column, row):
         scrollInstruct = scrolledtext.ScrolledText(solarWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
-                              "Solarize will invert all pixel values above a threshold.\n Enter a threshold between 0 "
+                              "Solarize will invert all pixel\nvalues above a threshold.\nEnter a threshold between 0 "
                               "and 256\nEnter a folder path to place "
                               "the\nresults in.")
         thresholdLabel = t.Label(solarWindow, text="Enter threshold", fg=fg, bg=titleBg)
         thresholdLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         thresholdLabel.grid(column=0, row=1, padx=padx, pady=pady)
-        threshold = t.Entry(solarWindow)
-        threshold.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        threshold.grid(column=0, row=2)
+        threshold = ttk.Combobox(solarWindow)
+        threshold.configure(font=(font, fontSize), width=width, )
+        threshold['values'] = (
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29,
+            30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+            57,
+            58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+            85,
+            86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+            110,
+            111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131,
+            132,
+            133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153,
+            154,
+            155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+            176,
+            177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197,
+            198,
+            199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219,
+            220,
+            221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241,
+            242,
+            243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255)
+        threshold.grid(column=0, row=2, padx=padx, pady=pady)
+        threshold.current(0)
         folderLabel = t.Label(solarWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
@@ -1438,9 +1471,10 @@ def makeSolarizeButton(column, row):
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = Image.open(dir.get() + "\\" + i)
-                image2 = ImageOps.solarize(image1, int(threshold.get()))
-                image2.save(folder.get() + "\\-solarize-" + i)
+                if i != "":
+                    image1 = Image.open(dir.get() + "\\" + i)
+                    image2 = ImageOps.solarize(image1, int(threshold.get()))
+                    image2.save(folder.get() + "\\solarize-" + i)
             getFiles()
             solarWindow.destroy()
 
@@ -1480,7 +1514,7 @@ def makeSolarizeButton(column, row):
                 image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
 
             solarBar = t.Scale(previewWindow, variable=var, from_=0, to_=255, resolution=1,
-                                  label="Solarize", command=moved, length=300)
+                               label="Solarize", command=moved, length=300)
             solarBar.pack()
 
         solarPreviewButton = t.Button(solarWindow, text="Preview", fg=fg, bg=bg)
@@ -1637,14 +1671,40 @@ def makeThresholdButton(column, row):
         thresholdLabel = t.Label(threshWindow, text="Enter Threshold", fg=fg, bg=titleBg)
         thresholdLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         thresholdLabel.grid(column=0, row=6, padx=padx, pady=pady)
-        threshold = t.Entry(threshWindow)
-        threshold.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        threshold = ttk.Combobox(threshWindow)
+        threshold.configure(font=(font, fontSize), width=width, )
+        threshold['values'] = (
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+            56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+            83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107,
+            108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128,
+            129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149,
+            150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169,
+            170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
+            191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211,
+            212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232,
+            233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253,
+            254, 255)
         threshold.grid(column=0, row=7)
         maxLabel = t.Label(threshWindow, text="Enter Max Value", fg=fg, bg=titleBg)
         maxLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         maxLabel.grid(column=0, row=8, padx=padx, pady=pady)
-        max = t.Entry(threshWindow)
-        max.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        max = threshold = ttk.Combobox(threshWindow)
+        max.configure(font=(font, fontSize), width=width, )
+        max['values'] = (
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+            56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+            83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107,
+            108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128,
+            129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149,
+            150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169,
+            170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
+            191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211,
+            212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232,
+            233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253,
+            254, 255)
         max.grid(column=0, row=9)
         folderLabel = t.Label(threshWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
@@ -1678,22 +1738,27 @@ def makeThresholdButton(column, row):
                 messagebox.showinfo("ERROR", "Could not find or make threshold type specific folders")
                 return
             for i in listOfNames:
-                img1 = cv2.imread(dir.get() + "\\" + i)
-                if stateOfBinary.get():
-                    retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_BINARY)
-                    cv2.imwrite(folder.get() + "\\" + "Binary\\thresh-binary-" + i, threshImg)
-                if stateOfInvBinary.get():
-                    retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_BINARY_INV)
-                    cv2.imwrite(folder.get() + "\\" + "InverseBinary\\thresh-Inversebinary-" + i, threshImg)
-                if stateOfToZero.get():
-                    retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TOZERO)
-                    cv2.imwrite(folder.get() + "\\" + "ToZero\\thresh-ToZero-" + i, threshImg)
-                if stateOfInvZero.get():
-                    retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TOZERO_INV)
-                    cv2.imwrite(folder.get() + "\\" + "InverseToZero\\thresh-InverseToZero-" + i, threshImg)
-                if stateOfTrunc.get():
-                    retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TRUNC)
-                    cv2.imwrite(folder.get() + "\\" + "Trunc\\thresh-Trunc-" + i, threshImg)
+                if i != "":
+                    img1 = cv2.imread(dir.get() + "\\" + i)
+                    if stateOfBinary.get():
+                        retval, threshImg1 = cv2.threshold(img1, int(threshold.get()), int(max.get()),
+                                                           cv2.THRESH_BINARY)
+                        cv2.imwrite(folder.get() + "\\" + "Binary\\thresh-binary-" + i, threshImg1)
+                    if stateOfInvBinary.get():
+                        retval, threshImg2 = cv2.threshold(img1, int(threshold.get()), int(max.get()),
+                                                           cv2.THRESH_BINARY_INV)
+                        cv2.imwrite(folder.get() + "\\" + "InverseBinary\\thresh-Inversebinary-" + i, threshImg2)
+                    if stateOfToZero.get():
+                        retval, threshImg3 = cv2.threshold(img1, int(threshold.get()), int(max.get()),
+                                                           cv2.THRESH_TOZERO)
+                        cv2.imwrite(folder.get() + "\\" + "ToZero\\thresh-ToZero-" + i, threshImg3)
+                    if stateOfInvZero.get():
+                        retval, threshImg4 = cv2.threshold(img1, int(threshold.get()), int(max.get()),
+                                                           cv2.THRESH_TOZERO_INV)
+                        cv2.imwrite(folder.get() + "\\" + "InverseToZero\\thresh-InverseToZero-" + i, threshImg4)
+                    if stateOfTrunc.get():
+                        retval, threshImg5 = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TRUNC)
+                        cv2.imwrite(folder.get() + "\\" + "Trunc\\thresh-Trunc-" + i, threshImg5)
             getFiles()
             threshWindow.destroy()
 
@@ -1713,22 +1778,22 @@ def makeThresholdButton(column, row):
             status = folderCheckCreation(dir.get() + "\\TempFolder")
             if not status:
                 messagebox.showinfo("Error", "Error Creating Temporary folder")
+            img1 = cv2.imread(dir.get() + "\\" + listOfNames[0])
             if stateOfBinary.get():
-                retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_BINARY)
-                cv2.imwrite(folder.get() + "\\" + "Binary\\thresh-binary-" + img1, threshImg)
+                retval, threshImg1 = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_BINARY)
+                cv2.imshow("Binary", threshImg1)
             if stateOfInvBinary.get():
-                retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_BINARY_INV)
-                cv2.imwrite(folder.get() + "\\" + "InverseBinary\\thresh-Inversebinary-" + img1, threshImg)
+                retval, threshImg2 = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_BINARY_INV)
+                cv2.imshow("Inverse Binary", threshImg2)
             if stateOfToZero.get():
-                retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TOZERO)
-                cv2.imwrite(folder.get() + "\\" + "ToZero\\thresh-ToZero-" + img1, threshImg)
+                retval, threshImg3 = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TOZERO)
+                cv2.imshow("To Thresholding", threshImg3)
             if stateOfInvZero.get():
-                retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TOZERO_INV)
-                cv2.imwrite(folder.get() + "\\" + "InverseToZero\\thresh-InverseToZero-" + img1, threshImg)
+                retval, threshImg4 = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TOZERO_INV)
+                cv2.imshow("Inverse to Zero", threshImg4)
             if stateOfTrunc.get():
-                retval, threshImg = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TRUNC)
-                cv2.imwrite(folder.get() + "\\" + "Trunc\\thresh-Trunc-" + img1, threshImg)
-            cv2.waitKey(0)
+                retval, threshImg5 = cv2.threshold(img1, int(threshold.get()), int(max.get()), cv2.THRESH_TRUNC)
+                cv2.imshow("Trunc", threshImg5)
 
         thresholdPreviewButton = t.Button(threshWindow, text="Preview", fg=fg, bg=bg)
         thresholdPreviewButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth,
@@ -1793,14 +1858,40 @@ def makeEdgeDetectButton(column, row):
         t1Label = t.Label(edgeWindow, text="Enter first threshold", fg=fg, bg=titleBg)
         t1Label.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         t1Label.grid(column=0, row=1, padx=padx, pady=pady)
-        threshold1 = t.Entry(edgeWindow)
-        threshold1.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        threshold1 = threshold = ttk.Combobox(edgeWindow)
+        threshold1.configure(font=(font, fontSize), width=width, )
+        threshold1['values'] = (
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+            56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+            83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107,
+            108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128,
+            129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149,
+            150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169,
+            170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
+            191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211,
+            212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232,
+            233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253,
+            254, 255)
         threshold1.grid(column=0, row=2)
         t2Label = t.Label(edgeWindow, text="Enter second threshold", fg=fg, bg=titleBg)
         t2Label.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         t2Label.grid(column=0, row=3, padx=padx, pady=pady)
-        threshold2 = t.Entry(edgeWindow)
-        threshold2.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        threshold2 = threshold = ttk.Combobox(edgeWindow)
+        threshold2.configure(font=(font, fontSize), width=width, )
+        threshold2['values'] = (
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+            56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
+            83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107,
+            108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128,
+            129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149,
+            150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169,
+            170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190,
+            191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211,
+            212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232,
+            233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253,
+            254, 255)
         threshold2.grid(column=0, row=4)
         aptValueLabel = t.Label(edgeWindow, text="Enter aperture size", fg=fg, bg=titleBg)
         aptValueLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
@@ -1851,9 +1942,10 @@ def makeEdgeDetectButton(column, row):
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = cv2.imread(dir.get() + "\\" + i)
-                image2 = cv2.Canny(image1, t2, t1, stateOfChk.get(), aperture)
-                cv2.imwrite(folder.get() + "\\-edgeDetect-" + i, image2)
+                if i != "":
+                    image1 = cv2.imread(dir.get() + "\\" + i)
+                    image2 = cv2.Canny(image1, t2, t1, stateOfChk.get(), aperture)
+                    cv2.imwrite(folder.get() + "\\edgeDetect-" + i, image2)
             getFiles()
             edgeWindow.destroy()
 
@@ -1989,7 +2081,7 @@ def makeGradientButton(column, row):
             if len(kernel.get()) > 0:
                 ksize = int(kernel.get())
             else:
-                ksize =3
+                ksize = 3
             if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
                 messagebox.showinfo("ERROR", listOfNames[0])
                 return
@@ -2002,22 +2094,23 @@ def makeGradientButton(column, row):
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
             for i in listOfNames:
-                image1 = cv2.imread(dir.get() + "\\" + i)
-                if stateOfSobelX.get():
-                    image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 1, 0, ksize=ksize)
-                    cv2.imwrite(folder.get() + "\\Sobel-x\\sobel-x-" + i, image2)
-                if stateOfSobelY.get():
-                    image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 0, 1, ksize=ksize)
-                    cv2.imwrite(folder.get() + "\\Sobel-y\\sobel-y-" + i, image2)
-                if stateOfScharrX.get():
-                    image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 1, 0, -1)
-                    cv2.imwrite(folder.get() + "\\Scharr-x\\scharr-x-" + i, image2)
-                if stateOfScharrY.get():
-                    image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 0, 1, -1)
-                    cv2.imwrite(folder.get() + "\\Scharr-y\\scharr-y-" + i, image2)
-                if stateOfLaplacian.get():
-                    image2 = cv2.Laplacian(image1, int(-1 / cv2.CV_64F))
-                    cv2.imwrite(folder.get() + "\\Laplacian\\laplacian-" + i, image2)
+                if i != "":
+                    image1 = cv2.imread(dir.get() + "\\" + i)
+                    if stateOfSobelX.get():
+                        image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 1, 0, ksize=ksize)
+                        cv2.imwrite(folder.get() + "\\Sobel-x\\sobel-x-" + i, image2)
+                    if stateOfSobelY.get():
+                        image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 0, 1, ksize=ksize)
+                        cv2.imwrite(folder.get() + "\\Sobel-y\\sobel-y-" + i, image2)
+                    if stateOfScharrX.get():
+                        image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 1, 0, -1)
+                        cv2.imwrite(folder.get() + "\\Scharr-x\\scharr-x-" + i, image2)
+                    if stateOfScharrY.get():
+                        image2 = cv2.Sobel(image1, int(-1 / cv2.CV_64F), 0, 1, -1)
+                        cv2.imwrite(folder.get() + "\\Scharr-y\\scharr-y-" + i, image2)
+                    if stateOfLaplacian.get():
+                        image2 = cv2.Laplacian(image1, int(-1 / cv2.CV_64F))
+                        cv2.imwrite(folder.get() + "\\Laplacian\\laplacian-" + i, image2)
             getFiles()
             gradientWindow.destroy()
 
@@ -2074,6 +2167,113 @@ def makeGradientButton(column, row):
     return row + 1
 
 
+def getFormats(column, row):
+    """
+    Opens a window of the formats of the images slected
+    :param column: int of column to place button
+    :param row:int of row to place button
+    :return: row updated by 1
+    """
+
+    def formatWindowPushed():
+        """
+        opens widow collects format data and outputs it to scroll box in window
+        :return:
+        """
+        listOfNames = getFilesInDrop()
+        if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+            messagebox.showinfo("ERROR", listOfNames[0])
+            return
+        formatWindow = t.Toplevel(enhanceWindow)
+        formatWindow.geometry("300x400")
+        formatWindow.title("Image Formats")
+        formatWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+        scrollInstruct = scrolledtext.ScrolledText(formatWindow, width=35, height=400)
+        scrollInstruct.grid(column=0, row=0)
+        text = ""
+        for i in listOfNames:
+            if i != "":
+                img = cv2.imread(dir.get() + "\\" + i,
+                                 cv2.IMREAD_UNCHANGED)
+                temp = img.shape
+                line = i + ": " + str(temp) + "\n"
+                text = text + line
+        scrollInstruct.insert(t.INSERT, text)
+
+    formatWindowButton = t.Button(enhanceWindow, text="Image Formats", fg=fg, bg=bg)
+    formatWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                                 command=formatWindowPushed)
+    formatWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row + 1
+
+
+def makeChangeTo1Channel(column, row):
+    """
+    make window to convert image form 3 to 1 channel
+    :param column: int of column to place button
+    :param row: int of row to place button
+    :return: row updated by 1
+    """
+
+    def convertWindowPushed():
+        """
+        creates widgets for image conversion
+        :return:
+        """
+        channelWindow = t.Toplevel(enhanceWindow)
+        channelWindow.geometry("300x400")
+        channelWindow.title("Channel Change")
+        channelWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
+
+        scrollInstruct = scrolledtext.ScrolledText(channelWindow, width=35, height=5)
+        scrollInstruct.grid(column=0, row=0)
+        scrollInstruct.insert(t.INSERT,
+                              "Converts three channel images to\none channel images. Enter folder to\nplace the resutling images.")
+        folderLabel = t.Label(channelWindow, text="Enter folder", fg=fg, bg=titleBg)
+        folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
+        folderLabel.grid(column=0, row=1, padx=padx, pady=pady)
+        folder = t.Entry(channelWindow)
+        folder.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        folder.grid(column=0, row=2)
+
+        def convertPushed():
+            """
+            converts images to 1 channel
+            :return:
+            """
+            listOfNames = getFilesInDrop()
+            if listOfNames[0] == "No files available" or listOfNames[0] == "No files chosen":
+                messagebox.showinfo("ERROR", listOfNames[0])
+                return
+            if len(folder.get()) == 0:
+                messagebox.showinfo("ERROR", "Enter a folder")
+                return
+            status = folderCheckCreation(folder.get())
+            if not status:
+                messagebox.showinfo("ERROR", "Directory not found and could not be created")
+                return
+            for i in listOfNames:
+                if i != "":
+                    temp = cv2.imread(dir.get() + "\\" + i)
+                    imageToSave = cv2.cvtColor(temp, cv2.COLOR_BGR2GRAY)
+                    cv2.imwrite(folder.get() + "\\" + "1Channel-" + i, imageToSave)
+
+            getFiles()
+            channelWindow.destroy()
+
+        convertButton = t.Button(channelWindow, text="Convert", fg=fg, bg=bg)
+        convertButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                                command=convertPushed)
+        convertButton.grid(column=0, row=11, padx=padx, pady=pady)
+        convertButton.mainloop()
+
+    convertWindowButton = t.Button(enhanceWindow, text="Convert Menu", fg=fg, bg=bg)
+    convertWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
+                                  command=convertWindowPushed)
+    convertWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
+    return row + 1
+
+
 def makeImageConnectionsButtons(column):
     """
     The second column will contain buttons that connect images in some way.
@@ -2086,6 +2286,7 @@ def makeImageConnectionsButtons(column):
     row = makeImageStitchButton(column, row)
     row = makeImageRegButton(column, row)
     row = makePCAButton(column, row)
+    row = makeColorizeButton(column, row)
     return column + 1
 
 
@@ -2102,7 +2303,6 @@ def makePillowImageButtons(column):
     row = makeSharpnessButton(column, row)
     row = makeEqualizeButton(column, row)
     row = makeSolarizeButton(column, row)
-    row = makeColorizeButton(column, row)
     return column + 1
 
 
@@ -2117,6 +2317,8 @@ def makeOpenCVImageButtons(column):
     row = makeThresholdButton(column, row)
     row = makeEdgeDetectButton(column, row)
     row = makeGradientButton(column, row)
+    row = getFormats(column, row)
+    row = makeChangeTo1Channel(column, row)
     return column + 1
 
 
