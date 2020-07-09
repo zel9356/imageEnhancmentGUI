@@ -246,9 +246,11 @@ def makeCropButton(column, row):
         cropLabel = t.Label(cropWindow, text="Enter crop factor", fg=fg, bg=titleBg)
         cropLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         cropLabel.grid(column=0, row=1, padx=padx, pady=pady)
-        cropFactor = t.Entry(cropWindow)
-        cropFactor.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        cropFactor.grid(column=0, row=2)
+        cropFactor = ttk.Combobox(cropWindow)
+        cropFactor.configure(font=(font, fontSize), width=width, )
+        cropFactor['values'] = (3, 4, 5, 6,7 ,8)
+        cropFactor.grid(column=0, row=2, padx=padx, pady=pady)
+        cropFactor.current(0)
         folderLabel = t.Label(cropWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
@@ -301,6 +303,9 @@ def makeCropButton(column, row):
             image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
             previewWindow = t.Toplevel(cropWindow)
             previewWindow.title("Contrast Controls")
+            image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+            image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+            cv2.imshow(listOfNames[0], image)
 
             def moved(var):
                 if int(var) == 2:
@@ -397,7 +402,10 @@ def makeImageStitchButton(column, row):
                 return
             if len(name.get()) < 1:
                 messagebox.showinfo("ERROR", "Enter Image Name")
+            f = open(folder.get() + "\\" + "StitchingInfo" + ".txt", "w")
+            f.write("Images stitched together from " + dir.get() + ": \n")
             for i in listOfNames:
+                f.write(i)
                 image = cv2.imread(dir.get() + "\\" + i)
                 images.append(image)
                 stitcher = cv2.Stitcher_create() if imutils.is_cv3() else cv2.Stitcher_create()
@@ -427,6 +435,7 @@ def makeImageStitchButton(column, row):
                                             "ERR_CAMERA_PARAMS_ADJUST_FAIL\n[INFO] image stitching failed({})".format(
                                                 status))
                     return
+            f.close()
             getFiles()
             stitchWindow.destroy()
 
@@ -464,13 +473,16 @@ def makeImageRegButton(column, row):
         scrollInstruct = scrolledtext.ScrolledText(regWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
-                              "Enter a main image name with\nextension. Images chosen will be\nregistered together.\nEnter a folder path to place "
+                              "Select a main image from the drop down. Images chosen will be\nregistered with the main image.\nEnter a folder path to place "
                               "the\nresults in.")
         mainImgLabel = t.Label(regWindow, text="Enter Main Image", fg=fg, bg=titleBg)
         mainImgLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         mainImgLabel.grid(column=0, row=1, padx=padx, pady=pady)
-        mainImg = t.Entry(regWindow)
-        mainImg.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        n = getFilesInDrop()
+        mainImg = ttk.Combobox(regWindow, width=width)
+        mainImg['values'] = n
+        mainImg.current(0)
+        mainImg.configure(font=(font, fontSize))
         mainImg.grid(column=0, row=2)
         folderLabel = t.Label(regWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
@@ -498,17 +510,22 @@ def makeImageRegButton(column, row):
             if not status:
                 messagebox.showinfo("ERROR", "Directory not found and could not be created")
                 return
-            for x in range(1, len(listOfNames)):
-                MAX_FEATURES = 500
-                GOOD_MATCH_PERCENT = 0.05
+            img1 = cv2.imread(dir.get() + "\\" + mainImg.get())
+            img1gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+            name = (folder.get() + "\\" + "reg-" + mainImg.get())
+            cv2.imwrite(name, img1gray)
+
+            for x in range(0, len(listOfNames)):
+                MAX_FEATURES = 1750
+                GOOD_MATCH_PERCENT = 0.90
 
                 img1 = cv2.imread(dir.get() + "\\" + mainImg.get())
-                img1gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-                img1eq = cv2.equalizeHist(img1gray)
+                img1eq = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+                #img1eq = cv2.equalizeHist(img1gray)
 
                 img2 = cv2.imread(dir.get() + "\\" + listOfNames[x])
-                img2gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-                img2eq = cv2.equalizeHist(img2gray)
+                img2eq = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+                #img2eq = cv2.equalizeHist(img2gray)
 
                 # Detect ORB features and compute descriptors.
                 orb = cv2.ORB_create(MAX_FEATURES)
@@ -546,7 +563,12 @@ def makeImageRegButton(column, row):
                 im2Reg = cv2.warpPerspective(img2, h, (width, height))
                 name = (folder.get() + "\\" + "reg-" + listOfNames[x])
                 gray = cv2.cvtColor(im2Reg, cv2.COLOR_BGR2GRAY)
-                cv2.imwrite(name, gray)
+                if mainImg.get() != listOfNames[x]:
+                    cv2.imwrite(name, gray)
+            f = open(folder.get() + "\\" + "RegisterInfo" + ".txt", "w")
+            f.write("Main Image = " + mainImg.get())
+            f.close()
+
             getFiles()
             regWindow.destroy()
 
@@ -728,9 +750,11 @@ def makeBrightnessButton(column, row):
         factorLabel = t.Label(brightnessWindow, text="Enter factor", fg=fg, bg=titleBg)
         factorLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         factorLabel.grid(column=0, row=1, padx=padx, pady=pady)
-        factor = t.Entry(brightnessWindow)
-        factor.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        factor.grid(column=0, row=2)
+        factor = ttk.Combobox(brightnessWindow)
+        factor.configure(font=(font, fontSize), width=width, )
+        factor['values'] = (3, 4, 5, 6,7,8,9,10,11,12)
+        factor.grid(column=0, row=2, padx=padx, pady=pady)
+        factor.current(0)
         folderLabel = t.Label(brightnessWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
@@ -785,6 +809,9 @@ def makeBrightnessButton(column, row):
             image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
             previewWindow = t.Toplevel(brightnessWindow)
             previewWindow.title("Brightnesss Controls")
+            image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+            image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+            cv2.imshow(listOfNames[0], image)
 
             def moved(var):
                 """
@@ -802,7 +829,7 @@ def makeBrightnessButton(column, row):
                 image2.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
                 image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
 
-            brightBar = t.Scale(previewWindow, variable=var, from_=0, to_=8, resolution=.1,
+            brightBar = t.Scale(previewWindow, variable=var, from_=0, to_=12, resolution=.1,
                                 label="Brightness", command=moved, length=200)
             brightBar.pack()
 
@@ -852,9 +879,11 @@ def makeContrastButton(column, row):
         factorLabel = t.Label(contrastWindow, text="Enter factor", fg=fg, bg=titleBg)
         factorLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         factorLabel.grid(column=0, row=1, padx=padx, pady=pady)
-        factor = t.Entry(contrastWindow)
-        factor.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        factor.grid(column=0, row=2)
+        factor = ttk.Combobox(contrastWindow)
+        factor.configure(font=(font, fontSize), width=width, )
+        factor['values'] = (3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+        factor.grid(column=0, row=2, padx=padx, pady=pady)
+        factor.current(0)
         folderLabel = t.Label(contrastWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
@@ -909,6 +938,9 @@ def makeContrastButton(column, row):
             image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
             previewWindow = t.Toplevel(contrastWindow)
             previewWindow.title("Contrast Controls")
+            image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+            image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+            cv2.imshow(listOfNames[0], image)
 
             def moved(var):
                 """
@@ -976,9 +1008,11 @@ def makeSharpnessButton(column, row):
         factorLabel = t.Label(sharpWindow, text="Enter factor", fg=fg, bg=titleBg)
         factorLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         factorLabel.grid(column=0, row=1, padx=padx, pady=pady)
-        factor = t.Entry(sharpWindow)
-        factor.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        factor.grid(column=0, row=2)
+        factor = ttk.Combobox(sharpWindow)
+        factor.configure(font=(font, fontSize), width=width, )
+        factor['values'] = (3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+        factor.grid(column=0, row=2, padx=padx, pady=pady)
+        factor.current(0)
         folderLabel = t.Label(sharpWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         folderLabel.grid(column=0, row=3, padx=padx, pady=pady)
@@ -1033,6 +1067,9 @@ def makeSharpnessButton(column, row):
             image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
             previewWindow = t.Toplevel(sharpWindow)
             previewWindow.title("Contrast Controls")
+            image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+            image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+            cv2.imshow(listOfNames[0], image)
 
             def moved(var):
                 """
@@ -1064,7 +1101,6 @@ def makeSharpnessButton(column, row):
                               command=sharpPushed)
         sharpButton.grid(column=0, row=6, padx=padx, pady=pady)
         sharpWindow.mainloop()
-
     sharpWindowButton = t.Button(enhanceWindow, text="Sharpness Menu", fg=fg, bg=bg)
     sharpWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                 command=sharpWindowPushed)
@@ -1188,7 +1224,7 @@ def makeColorizeButton(column, row):
         :return:
         """
         colorWindow = t.Toplevel(enhanceWindow)
-        colorWindow.geometry("300x600")
+        colorWindow.geometry("300x650")
         colorWindow.title("Colorize")
         colorWindow.iconbitmap("imagesForGUI\\colorize.ico")
         scrollInstruct = scrolledtext.ScrolledText(colorWindow, width=35, height=5)
@@ -1212,9 +1248,32 @@ def makeColorizeButton(column, row):
         blackValueLabel = t.Label(colorWindow, text="Enter black int value", fg=fg, bg=titleBg)
         blackValueLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         blackValueLabel.grid(column=0, row=3, padx=padx, pady=pady)
-        blackValue = t.Entry(colorWindow)
-        blackValue.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        blackValue.grid(column=0, row=4)
+        blackValue = ttk.Combobox(colorWindow)
+        blackValue.configure(font=(font, fontSize), width=width, )
+        blackValue['values'] = (
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29,
+            30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+            57,
+            58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+            85,
+            86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+            110,
+            111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131,
+            132,
+            133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153,
+            154,
+            155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+            176,
+            177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197,
+            198,
+            199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219,
+            220,
+            221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241,
+            242,
+            243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255)
+        blackValue.grid(column=0, row=4, padx=padx, pady=pady)
+        blackValue.current(0)
         midColorLabel = t.Label(colorWindow, text="Enter midpoint input color", fg=fg, bg=titleBg)
         midColorLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         midColorLabel.grid(column=0, row=5, padx=padx, pady=pady)
@@ -1226,9 +1285,32 @@ def makeColorizeButton(column, row):
         midValueLabel = t.Label(colorWindow, text="Enter midpoint int value", fg=fg, bg=titleBg)
         midValueLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         midValueLabel.grid(column=0, row=7, padx=padx, pady=pady)
-        midValue = t.Entry(colorWindow)
-        midValue.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        midValue.grid(column=0, row=8)
+        midValue = ttk.Combobox(colorWindow)
+        midValue.configure(font=(font, fontSize), width=width, )
+        midValue['values'] = (
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29,
+            30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+            57,
+            58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+            85,
+            86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+            110,
+            111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131,
+            132,
+            133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153,
+            154,
+            155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+            176,
+            177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197,
+            198,
+            199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219,
+            220,
+            221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241,
+            242,
+            243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255)
+        midValue.grid(column=0, row=8, padx=padx, pady=pady)
+        midValue.current(0)
         whiteColorLabel = t.Label(colorWindow, text="Enter white input color", fg=fg, bg=titleBg)
         whiteColorLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         whiteColorLabel.grid(column=0, row=9, padx=padx, pady=pady)
@@ -1240,9 +1322,32 @@ def makeColorizeButton(column, row):
         whiteValueLabel = t.Label(colorWindow, text="Enter white int value", fg=fg, bg=titleBg)
         whiteValueLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         whiteValueLabel.grid(column=0, row=11, padx=padx, pady=pady)
-        whiteValue = t.Entry(colorWindow)
-        whiteValue.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
-        whiteValue.grid(column=0, row=12)
+        whiteValue = ttk.Combobox(colorWindow)
+        whiteValue.configure(font=(font, fontSize), width=width, )
+        whiteValue['values'] = (
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
+            29,
+            30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56,
+            57,
+            58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84,
+            85,
+            86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109,
+            110,
+            111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131,
+            132,
+            133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153,
+            154,
+            155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175,
+            176,
+            177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197,
+            198,
+            199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219,
+            220,
+            221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241,
+            242,
+            243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254, 255)
+        whiteValue.grid(column=0, row=12, padx=padx, pady=pady)
+        whiteValue.current(0)
         folderLabel = t.Label(colorWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         folderLabel.grid(column=0, row=13, padx=padx, pady=pady)
@@ -1475,6 +1580,7 @@ def makeSolarizeButton(column, row):
                     image1 = Image.open(dir.get() + "\\" + i)
                     image2 = ImageOps.solarize(image1, int(threshold.get()))
                     image2.save(folder.get() + "\\solarize-" + i)
+
             getFiles()
             solarWindow.destroy()
 
@@ -1497,6 +1603,9 @@ def makeSolarizeButton(column, row):
             image1.save(dir.get() + "\\" + "temporyPreview\\" + listOfNames[0])
             previewWindow = t.Toplevel(solarWindow)
             previewWindow.title("Solarize Controls")
+            image = cv2.imread(dir.get() + "\\temporyPreview\\" + listOfNames[0])
+            image = cv2.resize(image, (w, l), interpolation=cv2.INTER_AREA)
+            cv2.imshow(listOfNames[0], image)
 
             def moved(var):
                 """
@@ -1849,7 +1958,7 @@ def makeEdgeDetectButton(column, row):
         scrollInstruct = scrolledtext.ScrolledText(edgeWindow, width=35, height=5)
         scrollInstruct.grid(column=0, row=0)
         scrollInstruct.insert(t.INSERT,
-                              "Edge detection requires a two\nthresholds. It also requires an\naperture_size. "
+                              "Edge detection requires two\nthresholds. It also requires an\naperture_size. "
                               "It is the size of\nSobel kernel used for find image\ngradients. 2gradient specifies "
                               "the\nequation for finding gradient\nmagnitude. If it is selected, it\nuses a more "
                               "accurate equation,\notherwise it uses this function:"
@@ -1858,7 +1967,7 @@ def makeEdgeDetectButton(column, row):
         t1Label = t.Label(edgeWindow, text="Enter first threshold", fg=fg, bg=titleBg)
         t1Label.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         t1Label.grid(column=0, row=1, padx=padx, pady=pady)
-        threshold1 = threshold = ttk.Combobox(edgeWindow)
+        threshold1 = ttk.Combobox(edgeWindow)
         threshold1.configure(font=(font, fontSize), width=width, )
         threshold1['values'] = (
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
@@ -1877,7 +1986,7 @@ def makeEdgeDetectButton(column, row):
         t2Label = t.Label(edgeWindow, text="Enter second threshold", fg=fg, bg=titleBg)
         t2Label.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         t2Label.grid(column=0, row=3, padx=padx, pady=pady)
-        threshold2 = threshold = ttk.Combobox(edgeWindow)
+        threshold2 = ttk.Combobox(edgeWindow)
         threshold2.configure(font=(font, fontSize), width=width, )
         threshold2['values'] = (
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28,
@@ -1896,8 +2005,10 @@ def makeEdgeDetectButton(column, row):
         aptValueLabel = t.Label(edgeWindow, text="Enter aperture size", fg=fg, bg=titleBg)
         aptValueLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         aptValueLabel.grid(column=0, row=5, padx=padx, pady=pady)
-        aptVal = t.Entry(edgeWindow)
-        aptVal.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        aptVal = ttk.Combobox(edgeWindow)
+        aptVal.configure(font=(font, fontSize), width=width, )
+        aptVal['values'] = (3, 5, 7)
+        aptVal.current(0)
         aptVal.grid(column=0, row=6)
         stateOfChk = t.BooleanVar()
         stateOfChk.set(False)
@@ -1976,7 +2087,7 @@ def makeEdgeDetectButton(column, row):
 
             image1 = cv2.imread(dir.get() + "\\" + listOfNames[0])
             image2 = cv2.Canny(image1, t2, t1, stateOfChk.get(), aperture)
-            cv2.imwrite(folder.get() + "\\-edgeDetect-" + listOfNames[0], image2)
+            cv2.imwrite(folder.get() + "\\edgeDetect-" + listOfNames[0], image2)
             cv2.imshow("Edge Detection", image2)
 
         edgePreviewButton = t.Button(edgeWindow, text="Preview", fg=fg, bg=bg)
@@ -2059,8 +2170,10 @@ def makeGradientButton(column, row):
         kernelLabel = t.Label(gradientWindow, text="Enter kernel size", fg=fg, bg=titleBg)
         kernelLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
         kernelLabel.grid(column=0, row=6, padx=padx, pady=pady)
-        kernel = t.Entry(gradientWindow)
-        kernel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth)
+        kernel = ttk.Combobox(gradientWindow)
+        kernel.configure(font=(font, fontSize), width=width, )
+        kernel['values'] = (1, 3, 5, 7)
+        kernel.current(0)
         kernel.grid(column=0, row=7)
         folderLabel = t.Label(gradientWindow, text="Enter folder", fg=fg, bg=titleBg)
         folderLabel.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=titleRelief)
@@ -2186,7 +2299,7 @@ def getFormats(column, row):
             return
         formatWindow = t.Toplevel(enhanceWindow)
         formatWindow.geometry("300x400")
-        formatWindow.title("Image Formats")
+        formatWindow.title("Image Format")
         formatWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
         scrollInstruct = scrolledtext.ScrolledText(formatWindow, width=35, height=400)
         scrollInstruct.grid(column=0, row=0)
@@ -2200,7 +2313,7 @@ def getFormats(column, row):
                 text = text + line
         scrollInstruct.insert(t.INSERT, text)
 
-    formatWindowButton = t.Button(enhanceWindow, text="Image Formats", fg=fg, bg=bg)
+    formatWindowButton = t.Button(enhanceWindow, text="Image Format", fg=fg, bg=bg)
     formatWindowButton.configure(font=(font, fontSize), width=width, borderwidth=borderwidth, relief=buttonRelief,
                                  command=formatWindowPushed)
     formatWindowButton.grid(column=column, row=row, padx=padx, pady=pady)
@@ -2222,7 +2335,7 @@ def makeChangeTo1Channel(column, row):
         """
         channelWindow = t.Toplevel(enhanceWindow)
         channelWindow.geometry("300x400")
-        channelWindow.title("Channel Change")
+        channelWindow.title("Convert")
         channelWindow.iconbitmap("imagesForGUI\\guiIcon.ico")
 
         scrollInstruct = scrolledtext.ScrolledText(channelWindow, width=35, height=5)
